@@ -31,6 +31,9 @@
           <hr class="menu__rule">
           <button class="menu__item" role="menuitem" type="button" data-action="new-pack">New pack…</button>
           <button class="menu__item" role="menuitem" type="button" data-action="open-pack">Open pack…<kbd>Ctrl+O</kbd></button>
+          <button class="menu__item" role="menuitem" type="button" data-action="rename-pack">Rename pack…</button>
+          <button class="menu__item" role="menuitem" type="button" data-action="delete-pack"
+                  title="Delete the open pack and every icon in it">Delete pack…</button>
           <button class="menu__item" role="menuitem" type="button" data-action="preview-pack"
                   title="Every icon in the pack on one sheet">Preview pack…<kbd>Ctrl+P</kbd></button>
           <button class="menu__item" role="menuitem" type="button" data-action="save-pack-to"
@@ -146,6 +149,9 @@
       <div class="layers" id="layer-control" role="group" aria-label="Layers"></div>
 
       <div class="zoom">
+        <button class="btn btn--icon" id="grid-toggle" type="button" aria-pressed="true" title="Hide the pixel grid (G)" aria-label="Pixel grid">
+          <span class="icon" data-icon="icons/grid.svg" aria-hidden="true"></span>
+        </button>
         <button class="btn btn--icon" id="zoom-in" type="button" title="Zoom in">+</button>
         <button class="btn btn--icon" id="zoom-out" type="button" title="Zoom out">&minus;</button>
         <button class="btn btn--icon" id="zoom-fit" type="button" title="Fit to screen (0)">&#9723;</button>

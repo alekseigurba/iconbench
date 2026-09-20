@@ -7,6 +7,44 @@ plan for what comes next is [docs/releases/BACKLOG.md](docs/releases/BACKLOG.md)
 
 ## Unreleased
 
+## 1.1.0 — 2026-09-20
+
+The first release drawn with: a finer line, a palette with an opinion, a sketch
+for every icon. The file format is the one it was, and a pack keeps the palette
+it was saved with. Full notes: [docs/releases/1.1.0.md](docs/releases/1.1.0.md).
+
+### Added
+- **Show and hide the pixel grid**, with the **#** button that now heads the
+  zoom stack or the **G** key. The live area and the centre lines stay. The
+  browser remembers.
+- **Reorder layers.** **Up** and **down** in the head of the layer control move
+  the layer being drawn on one place in the pile; each move is a step to undo.
+- **Rename pack…** and **Delete pack…** in the File menu. Renaming keeps the
+  icons, the palette and whatever is unsaved on the canvas. Deleting asks once,
+  says how many icons go with the pack, and cannot be undone.
+
+### Changed
+
+- **A new stock palette: eight families.** Each column of the 32 is a color to
+  draw lines in — grey, burnt orange, domain-map's brand green, teal, blue,
+  purple, red, ochre — with three tints of it under it to fill with: medium,
+  light, lightest. It replaces 1.0's grid of domain-map's fills. A pack already
+  saved keeps its own palette until **Reset to defaults** is pressed in the
+  palette editor — and since a line keeps its swatch by number, pressing it
+  recolors every line in the pack that wears one.
+- **A new line is 0.75 wide**, down from 2, and the width scale runs 0.25 to 4,
+  down from 8. A line 1.0 drew wider than 4 is held to 4 when its icon is
+  opened.
+- **A new line wears the grey that heads the first column** (swatch 1), and a
+  fill switched on for the first time is the light tint in the line's own
+  column, so the two belong together without being chosen.
+- **Every icon has a sketch of its own.** It leaves the canvas with its icon and
+  comes back with it, and a new icon starts with none. It is still never saved
+  with the icon: sketches are kept by the tab, survive a refresh, and go when
+  the tab does. A sketch follows its icon through Save as and a pack's rename.
+- **The palette sits above the color picker** in the panel, since a swatch is
+  what is reached for most. The picker is still always open under it.
+
 ## 1.0.0 — 2026-09-20
 
 The first release: everything in the backlog, built on domain-map's tokens,

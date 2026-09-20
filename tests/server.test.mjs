@@ -3,7 +3,7 @@
 // refuses. Nothing else is needed — no database, no Docker.
 //   node tests/server.test.mjs
 
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -75,6 +75,13 @@ try {
   check('an icon is deleted', (await fetch(`${base}/api/files/packs/domain-map/arrow-right.svg`, { method: 'DELETE' })).status === 204);
   check('and is gone', (await fetch(`${base}/api/files/packs/domain-map/arrow-right.svg`)).status === 404);
   check('deleting it twice says so', (await fetch(`${base}/api/files/packs/domain-map/arrow-right.svg`, { method: 'DELETE' })).status === 404);
+
+  // --- a pack is its folder ---
+  check('a pack with its palette left is still a folder', (await readdir(join(storageDir, 'packs'))).includes('domain-map'));
+  check('its last file gone, the pack is gone with it',
+    (await fetch(`${base}/api/files/packs/domain-map/pack.json`, { method: 'DELETE' })).status === 204
+    && !(await readdir(storageDir)).includes('packs'));
+  check('and the store itself is still there to be written to', (await put('packs/again/arrow.svg', svg)).ok);
 } finally {
   await new Promise((resolve) => server.close(resolve));
   server.closeAllConnections?.();

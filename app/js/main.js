@@ -30,7 +30,7 @@ const HINTS = {
   quadratic: 'Click an anchor, then its control, then the next anchor, and so on. Click the first point to close, double-click or Enter to finish, Esc to give it up.',
   catmull: 'Click the points the curve should run through. Click the first point to close, double-click or Enter to finish, Esc to give it up.',
   freehand: 'Draw with a pencil, a finger or the mouse: the stroke becomes a line when you let go. Smoothing is set in the panel. Two fingers pan and zoom.',
-  marker: 'Draw on the sketch layer: a guide to draw over, never saved with the icon. Ctrl+V pastes a picture there.',
+  marker: "Draw on this icon's sketch: a guide to draw over, never saved with the icon. Ctrl+V pastes a picture there.",
 };
 
 const TOOL_KEYS = { v: 'select', l: 'straight', q: 'quadratic', c: 'catmull', f: 'freehand', m: 'marker' };
@@ -88,6 +88,11 @@ async function openPack(name) {
   packIsKept = text !== null;
   actions.setPack(packFromJson(text ?? '', name, STOCK_PALETTE), found?.icons ?? []);
   actions.setDocument(newDocument());
+  rememberPack(name);
+}
+
+/** The pack to open next time the page does. */
+function rememberPack(name) {
   try {
     localStorage.setItem(PACK_KEY, name);
   } catch {
@@ -128,6 +133,50 @@ async function makePack() {
   await openPack(name);
   if (!packIsKept) await keepPackFile();
   say(`Opened ${name}`);
+}
+
+/**
+ * Another name for the open pack. The icon on the canvas stays where it is,
+ * unsaved changes and all: it is the folder that moves, not the work.
+ */
+async function renamePack() {
+  const from = store.pack.name;
+  const packs = await files.listPacks();
+  const to = await askLibrary({
+    title: `Rename ${from}`,
+    note: 'The pack keeps its icons and its palette; only its name changes.',
+    tiles: packTiles(packs),
+    current: from,
+    empty: 'No packs yet.',
+    name: { label: 'New name', value: from, suffix: '', confirm: 'Rename' },
+  });
+  if (!to || to === from) return;
+  if (packs.some((pack) => pack.name === to)) throw new Error(`There is already a pack called ${to}.`);
+
+  // A pack nobody has saved into is only a name, and there is nothing to move.
+  if (packIsKept) {
+    await files.renamePack(from, to);
+    await files.writePackFile(to, packToJson({ ...store.pack, name: to }));
+  }
+  actions.renamePack(to);
+  rememberPack(to);
+  await refreshIcons();
+  say(`Renamed ${from} to ${to}`);
+}
+
+/** Delete the open pack and everything in it, then open whichever pack is next. */
+async function deletePack() {
+  const { name, icons } = store.pack;
+  const holds = icons.length === 0 ? 'It has no icons in it.' : `Its ${icons.length} icon${icons.length === 1 ? '' : 's'} go with it.`;
+  if (!window.confirm(`Delete the pack ${name}? ${holds} This cannot be undone.`)) return;
+
+  await files.deletePack(name);
+  actions.forgetPackSketches(name);
+  // What is on the canvas went with the pack, so there is nothing to ask about.
+  store.file.dirty = false;
+  const next = (await files.listPacks())[0]?.name ?? PACK_NAME;
+  await openPack(next);
+  say(`Deleted ${name}`);
 }
 
 /**
@@ -232,8 +281,10 @@ const save = () => (store.file.name ? writeIcon(store.file.name) : saveAs());
 async function deleteIcon(name) {
   if (!window.confirm(`Delete ${name}.svg from ${store.pack.name}? This cannot be undone.`)) return;
   await files.deleteIcon(store.pack.name, name);
-  // The icon on the canvas outlives its file: it is simply unsaved again.
+  // The icon on the canvas outlives its file: it is simply unsaved again, and
+  // keeps the sketch it is being drawn over. Any other icon's sketch goes with it.
   if (name === store.file.name) actions.forgetFile();
+  else actions.forgetSketch(name);
   await refreshIcons();
   say(`Deleted ${name}.svg`);
 }
@@ -396,6 +447,18 @@ function paintChrome() {
   $('stats').textContent = `${layers} layer${layers === 1 ? '' : 's'} · ${lines} line${lines === 1 ? '' : 's'}`;
 }
 
+/** The pixel grid, on or off. The live area and the centre lines are the brief, and stay. */
+function toggleGrid() {
+  canvas.setGridShown(!canvas.isGridShown());
+  paintGridToggle();
+}
+
+function paintGridToggle() {
+  const shown = canvas.isGridShown();
+  $('grid-toggle').setAttribute('aria-pressed', String(shown));
+  $('grid-toggle').title = shown ? 'Hide the pixel grid (G)' : 'Show the pixel grid (G)';
+}
+
 function showPointer(position) {
   $('pointer-at').textContent = position ? `x ${position.x.toFixed(1)} · y ${position.y.toFixed(1)}` : '';
 }
@@ -458,6 +521,8 @@ function onKeyDown(event) {
     actions.nudgeLine(store.selection, ARROWS[key][0] * step, ARROWS[key][1] * step);
   } else if (key === ']' || key === '[') {
     if (store.selection) actions.restackLine(store.selection, key === ']' ? 'front' : 'back');
+  } else if (key === 'g') {
+    toggleGrid();
   } else if (key === '0') {
     canvas.fit();
   } else if (key === '+' || key === '=') {
@@ -490,6 +555,8 @@ async function start() {
     'load-from': loadFrom,
     'new-pack': makePack,
     'open-pack': chooseAndOpenPack,
+    'rename-pack': renamePack,
+    'delete-pack': deletePack,
     'preview-pack': previewPack,
     'save-pack-to': savePackTo,
     'load-pack-from': loadPackFrom,
@@ -504,6 +571,8 @@ async function start() {
   $('zoom-in').addEventListener('click', () => canvas.zoomBy(1.25));
   $('zoom-out').addEventListener('click', () => canvas.zoomBy(0.8));
   $('zoom-fit').addEventListener('click', () => canvas.fit());
+  $('grid-toggle').addEventListener('click', toggleGrid);
+  paintGridToggle();
 
   for (const button of document.querySelectorAll('.tool')) {
     button.addEventListener('click', () => actions.setTool(button.dataset.tool));

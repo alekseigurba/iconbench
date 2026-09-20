@@ -67,32 +67,50 @@ than throwing the text away.
 ### The palette
 
 Thirty-two inks, `--c1` … `--c32`, laid out the way the swatch grid shows them:
-eight across and four down. The first two columns are the blacks and the greys a
-minimal icon is mostly drawn in — white among them, for knocking a shape out of
-another. The six after them are domain-map's 24 fills, each column one family:
-greens, blues, pinks and purples, yellows, oranges and browns, reds.
+eight across and four down. **A column is a family**, and reads downwards the way
+it is used: a color to draw lines in, then three tints of it to fill with —
+medium, light, lightest.
 
-| | | | | | | | |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 `#000000` | 2 `#686868` | 3 `#86a27b` | 4 `#7fc6d8` | 5 `#e8bbd5` | 6 `#fede49` | 7 `#b06a46` | 8 `#f57a8c` |
-| 9 `#141414` | 10 `#9a9a9a` | 11 `#51a45c` | 12 `#3c94a3` | 13 `#a1a4ec` | 14 `#fee986` | 15 `#d36e3b` | 16 `#e08aac` |
-| 17 `#282828` | 18 `#c9c9c9` | 19 `#77bc80` | 20 `#5985ab` | 21 `#a86cd1` | 22 `#d3b23b` | 23 `#f2c3aa` | 24 `#f66598` |
-| 25 `#3d3d3d` | 26 `#ffffff` | 27 `#0d9c08` | 28 `#aedbe6` | 29 `#a85bad` | 30 `#f1982b` | 31 `#9f4e4e` | 32 `#d86161` |
+| | grey | orange | green | teal | blue | purple | red | ochre |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| line | 1 `#282828` | 2 `#c4561e` | 3 `#527a42` | 4 `#2a7f78` | 5 `#2f6690` | 6 `#6b4fa0` | 7 `#b3362d` | 8 `#a5790f` |
+| medium | 9 `#686868` | 10 `#d68962` | 11 `#86a27b` | 12 `#6aa5a1` | 13 `#6d94b1` | 14 `#9784bd` | 15 `#ca726c` | 16 `#c0a157` |
+| light | 17 `#c9c9c9` | 18 `#edccbc` | 19 `#cbd7c6` | 20 `#bfd9d7` | 21 `#c1d1de` | 22 `#d3cae3` | 23 `#e8c3c0` | 24 `#e4d7b7` |
+| lightest | 25 `#ececec` | 26 `#f6e6dd` | 27 `#e5ebe3` | 28 `#dfeceb` | 29 `#e0e8ee` | 30 `#e9e5f1` | 31 `#f4e1e0` | 32 `#f2ebdb` |
+
+The line colors are muted, to sit together, and every one is dark enough to hold
+as a 0.75 line on paper — the ochre is the faintest, at 3.9 to 1. Grey, burnt
+orange and domain-map's brand green come first; the other five carry on round the
+wheel from the green. The tints are 30, 70 and 85% of the way to white, which is
+how domain-map's brand scale steps: the green column *is* its brand 400, 300, 200
+and 100, and the grey keeps its charcoals. Eight line colors is more than any one
+set of minimal icons should wear; it is what lets each set pick its own two or
+three and find their fills under them.
+
+There is no pure white or black. domain-map shows icons on colored ovals, where a
+white fill would be a white patch rather than a knock-out; either is one typed hex
+in the picker, as a line's own color.
+
+A swatch is kept in a file by its number, counted across the rows, so column *k*
+is swatches *k*, *k*+8, *k*+16 and *k*+24.
 
 This is the *stock* palette. A pack carries its own copy in its `pack.json`, which
 **Edit palette** changes and **Reset to defaults** puts back to these.
 
-A new line is drawn in swatch 17, `#282828` — the ink of the chrome, and of
-domain-map's own icons. A fill switched on for the first time is swatch 18.
-[`app/js/defaults.js`](app/js/defaults.js) is where both are set.
+A new line is drawn in swatch 1, the grey that heads the first column — the ink
+of the chrome, and of domain-map's own icons — and is 0.75 wide. A fill switched
+on for the first time is the *light* tint in the column the line's color is in, so
+the two belong together without being chosen; a line in a color of its own takes
+the grey column's. [`app/js/defaults.js`](app/js/defaults.js) is where all of it
+is set.
 
 ### How a color is worn
 
 A line wears each of its two colors in one of two ways, and the panel says which:
 
-- **As a swatch** — pressed in the palette grid. The line keeps the swatch's
-  number, shown after the hex as `#282828 · 17`, and follows the palette from
-  then on: edit swatch 17 and every line wearing it changes, in every icon of the
+- **As a swatch** — pressed in the palette. The line keeps the swatch's
+  number, shown after the hex as `#282828 · 1`, and follows the palette from
+  then on: edit swatch 1 and every line wearing it changes, in every icon of the
   pack.
 - **As a color of its own** — made with the picker or typed as a hex. It carries
   no number and follows nothing.
@@ -136,8 +154,8 @@ about files rather than about the drawing. Its list is `position: fixed` and
 placed in script, because the header does not scroll and would clip it. Above
 the rule it is about the icon: **New icon**, **Save**, **Save as…**, then
 **Save to…** and **Load from…**, which move one icon out of and into the library
-by hand. Below it, the pack: **New pack…**, **Open pack…**, **Preview pack…**,
-**Save pack to…** and **Load pack from…**.
+by hand. Below it, the pack: **New pack…**, **Open pack…**, **Rename pack…**,
+**Delete pack…**, **Preview pack…**, **Save pack to…** and **Load pack from…**.
 
 On the right, a chip naming what is open as `pack / icon` with its state in small
 capitals — *new*, *saved*, *unsaved* — which saves when pressed and fills orange
@@ -186,10 +204,13 @@ line up down the panel. A slider shows its value beside it in tabular figures.
 The two **Color** controls are `.ink` chips: a swatch of the color, its hex, and
 its swatch number if it wears one; *none* is paper with a red stroke through it.
 Pressing one points the third section at it, and the pressed one is outlined in
-`--selection`. That section — **Line color** or **Fill color** — is a picker that
-is always open (a saturation and brightness area, a hue strip, a hex field, each
-keeping the others in step) and under it the pack's palette, eight across. A drag
-over the picker recolors the line as it goes and is one step to undo.
+`--selection`. That section — **Line color** or **Fill color** — is the pack's
+palette and, under it, a picker. The palette comes first because a swatch is what
+is reached for most, and is what keeps a pack recolorable: one grid, eight
+across, a family to a column, with what each row is for — line color, medium,
+light or lightest fill — on every swatch's tooltip. The picker is always open (a saturation and
+brightness area, a hue strip, a hex field, each keeping the others in step); a
+drag over it recolors the line as it goes and is one step to undo.
 
 At the foot, **Edit palette** — which stays when nothing is selected, since the
 palette belongs to the pack — and **Delete line**, furthest down because it is the
@@ -222,14 +243,17 @@ hand wears.
 
 As little as possible, and all of it in the corners: the **preview** top right —
 the icon at 16, 24 and 48px on paper, with no grid to flatter it; the zoom stack
-bottom right; the **layer control** bottom left.
+bottom right, headed — a step apart — by the **#** switch that hides the pixel
+grid and goes quiet with it; the **layer control** bottom left.
 
 The layer control is domain-map's: one row per layer, topmost first, reading
 `name · drawing on · dim · eye`, the row being drawn on tinted `--selection`. Here
-the layers are the icon's own, so its head carries **add** and **delete**, and a
-name is double-clicked to rename it in place. Under a rule at the foot of the pile
+the layers are the icon's own, so its head carries **up**, **down**, **add** and
+**delete** — all four acting on the layer being drawn on — and a name is
+double-clicked to rename it in place. Under a rule at the foot of the pile
 lies the **Sketch** row — `clear · dim · eye` — because the sketch is a guide to
-draw over and not one of the icon's layers.
+draw over and not one of the icon's layers. It is this icon's sketch: another
+icon on the canvas brings its own.
 
 The cursor carries the tool: an arrow to pick things up, a crosshair to draw,
 grab and grabbing while panning.
@@ -238,7 +262,8 @@ grab and grabbing while panning.
 
 A 24×24 artboard on `--paper`, zoomed to fill the stage: the unit is the icon's
 pixel, however many screen pixels it is drawn across. On it, the pixel grid in
-`--grid` (dropped when zoomed too far out to be more than grey), and over the
+`--grid` (dropped when zoomed too far out to be more than grey, or when switched
+off), and over the
 icon — so a fill does not hide them — the **live area**, a dashed `--live-area`
 square 2px in on every side that leaves 20×20 for the artwork, and the two centre
 lines at a quarter of its strength.
@@ -263,7 +288,8 @@ An icon is saved as the SVG it is — 24×24, `fill="none"`, round caps and join
 so the library is a folder of icons any page can use, not a folder of project
 files. What the editor needs to open one again rides in `data-*` attributes: each
 layer's name on its `<g>`, each line's kind, points and swatches on its `<path>`.
-A hidden layer is written `display="none"`. The sketch is never written at all.
+A hidden layer is written `display="none"`. The sketch is never written at all:
+each icon's is kept by the browser tab, and goes when the tab does.
 
 A pack is a folder, `packs/<pack>/`, of icons with a `pack.json` beside them
 holding the palette. Names are lower case, digits and dashes, the way icon sets

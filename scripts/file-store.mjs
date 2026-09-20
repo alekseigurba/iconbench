@@ -4,7 +4,7 @@
 // is bytes, a listing is `{ key, size, lastModified }`. It is domain-map's, with
 // the one call an icon library needs on top: taking a file away.
 
-import { mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rm, rmdir, stat, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 
 /** A key can only ever resolve inside the store — no `..`, no drive letters. */
@@ -47,6 +47,18 @@ export async function removeObject(storageDir, key) {
     throw error;
   }
   await rm(filePath);
+
+  // A folder is only ever there because of what is in it — a key is a path, and
+  // nothing makes a folder on purpose — so one left empty goes too. It is what
+  // makes deleting a pack's last file delete the pack. rmdir refuses a folder
+  // with anything in it, which is the whole of the check.
+  for (let dir = dirname(filePath); dir !== storageDir && dir.startsWith(storageDir + sep); dir = dirname(dir)) {
+    try {
+      await rmdir(dir);
+    } catch {
+      break;
+    }
+  }
   return true;
 }
 

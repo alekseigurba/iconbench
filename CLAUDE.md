@@ -5,11 +5,22 @@ file holds only what the code and the docs do not say. Read the pointers first.
 
 ## Before anything else
 
-- **Grill first.** In the TUI, every prompt from the owner starts with
-  `/grill-me`, before any planning, reading or editing — by default, without
-  being asked. Only skip it when the prompt itself says to. It is a TUI
-  command: in a session where it is not installed (the VS Code extension, for
-  one) say so and carry on, rather than acting as though it ran.
+- **Grill first, every time.** Every prompt from the owner that asks for work
+  starts with the `grilling` skill (`/mattpocock-skills:grilling`; the owner
+  calls it `/grill-me`) before any planning or editing — by default, without
+  being asked, in the terminal and in VS Code alike. Read what the questions
+  need first, so they are about this repo and not generic. Only skip it when
+  the prompt itself says to, or when it is a bare command with nothing in it to
+  decide (a slash command, "run the tests", "print the commit commands"). If
+  the skill is not installed in a session, say so, and ask the hard questions
+  by hand instead of carrying on without them.
+- **Ask in the question prompt.** Grilling questions — and any other decision
+  put to the owner — go through the interactive question prompt (the
+  `AskUserQuestion` tool), automatically, never as a wall of text in the reply
+  to be answered by typing. One round at a time, the recommended answer first
+  and marked so, each option saying what it costs. A prompt holds four
+  questions, so a longer round is several prompts back to back. Facts the
+  answers depend on go in a short line of text before the prompt.
 
 ## Read first
 
@@ -58,12 +69,27 @@ file holds only what the code and the docs do not say. Read the pointers first.
 - Panels rebuilt on every store change are guarded by a signature of what they
   show (`drawnFrom`): the store says "doc" for every pixel of a drag, and a
   list rebuilt that often refetches every thumbnail that often.
-- The sketch layer is not part of the document. It lives in `store.sketch` and
-  the tab's session storage, which is what keeps it out of every saved file —
-  do not "fix" that by moving it into the document.
+- The sketch layer is not part of the document, which is what keeps it out of
+  every saved file — do not "fix" that by moving it into the document or into
+  the library. Each icon has its own: `store.sketch` is the one for the icon on
+  the canvas, the rest wait on a shelf in `store.js` keyed `pack/icon`, and
+  both live in the tab's session storage and nowhere else. That was the owner's
+  call, over a sidecar file: a sketch does not outlive its tab.
+- The palette is 32 swatches in one grid, eight across, and a column is a
+  family: a line colour, then its medium, light and lightest fills
+  (`PALETTE_ROWS`, `firstFillSwatch` in `defaults.js`). A file keeps a swatch by
+  its number, counted across the rows, so changing what a number means recolours
+  saved icons — the stock palette was replaced once, in 1.1, while the library
+  was still empty, and that is not a thing to do again lightly.
+- When the owner asks for a *suggestion*, print it and ask; do not build it in.
+  1.1's first cut added a second palette block because "suggest a palette" was
+  read as "add one".
 - `scripts/server.mjs` is static files plus a file API over `STORAGE_DIR`:
   get, put, delete and list, nothing else. It writes only
-  `packs/<pack>/<icon>.svg` and `packs/<pack>/pack.json`.
+  `packs/<pack>/<icon>.svg` and `packs/<pack>/pack.json`. Anything bigger — a
+  pack renamed, a pack deleted — is done by the page out of those four calls
+  (`files.js`), copying before deleting, so the store stays something S3 could
+  stand in for.
 
 ## Working agreements
 
@@ -127,3 +153,17 @@ Comments, docs and changelog entries share one voice, and it is domain-map's.
   it, so a diff shows the change and nothing else.
 - `tests/server.test.mjs` starts the real server on a free port against a
   throwaway folder. Nothing else is needed — no database, no Docker.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live as markdown files under `.scratch/<feature>/` in this repo, one file per ticket. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five default labels, named for their roles: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `CONTEXT.md` and `docs/adr/` at the repo root, created lazily by `/domain-modeling`. See `docs/agents/domain.md`.

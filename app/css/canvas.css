@@ -175,6 +175,11 @@
   gap: var(--gap-1);
 }
 
+/* The grid's switch heads the stack, a step apart from the three that zoom. Off,
+   it goes as quiet as the grid has. */
+#grid-toggle { margin-bottom: var(--gap-2); }
+#grid-toggle[aria-pressed="false"] { color: var(--ink-soft); opacity: 0.6; }
+
 /* The icon as it will be met: small, on paper, with no grid to flatter it. */
 .preview {
   position: absolute;

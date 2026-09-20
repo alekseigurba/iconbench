@@ -22,7 +22,7 @@ const throwsWith = (action, words) => {
   }
 };
 
-const stock = Array.from({ length: PALETTE_SIZE }, (_, i) => `#${(i * 8).toString(16).padStart(2, '0').repeat(3)}`);
+const stock = Array.from({ length: PALETTE_SIZE }, (_, i) => `#${(i * 5).toString(16).padStart(2, '0').repeat(3)}`);
 
 // --- palettes ---
 check('a palette is always the full set of swatches', packs.tidyPalette(['#ff0000'], stock).length === PALETTE_SIZE);

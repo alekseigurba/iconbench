@@ -105,7 +105,7 @@ function sketchRow() {
     + `${sketch.dimmed ? ' layers__row--dimmed' : ''}`);
 
   const name = element('span', 'layers__name', 'Sketch');
-  name.title = 'A guide to draw over: a pasted picture and marker lines. Never saved with the icon.';
+  name.title = 'The guide this icon is drawn over: a pasted picture and marker lines. Never saved with the icon.';
 
   row.append(
     name,
@@ -136,6 +136,12 @@ function render() {
   const head = element('div', 'layers__head');
   head.append(
     element('span', 'layers__title', 'Layers'),
+    // Up and down the pile, for the layer being drawn on: what is higher paints
+    // over what is lower, in the file as on the canvas.
+    layerButton('layers__up', 'arrow-up', 'Move the layer being drawn on up the pile', null,
+      () => actions.moveLayer(store.activeLayerId, 1), { disabled: !actions.canMoveLayer(store.activeLayerId, 1) }),
+    layerButton('layers__down', 'arrow-down', 'Move the layer being drawn on down the pile', null,
+      () => actions.moveLayer(store.activeLayerId, -1), { disabled: !actions.canMoveLayer(store.activeLayerId, -1) }),
     layerButton('layers__add', 'add', 'Add a layer above the one being drawn on', null,
       () => actions.addLayer(), { disabled: !actions.canAddLayer() }),
     layerButton('layers__delete', 'delete', 'Delete the layer being drawn on, and the lines on it', null, () => {

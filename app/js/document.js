@@ -12,12 +12,23 @@ import { CANVAS_SIZE, ICON_NAME, LAYER_NAME, LINE_STYLE, PALETTE_SIZE } from './
 import { KINDS, isDrawable, linePath, round } from './geometry.js';
 import { readHex } from './color.js';
 
-/** Bumped when the data-* attributes change shape. */
+/**
+ * Bumped when the data-* attributes change shape. The swatches past 32 that
+ * came with 1.1 did not bump it — the owner's call: the attributes are the same
+ * ones, and a 1.0 bench says which swatch it has no colour for.
+ */
 export const FORMAT_VERSION = 1;
 
 export const MAX_LAYERS = 12;
 export const MIN_WIDTH = 0.25;
-export const MAX_WIDTH = 8;
+export const MAX_WIDTH = 4;
+
+/**
+ * A width held to the scale. 1.0 drew lines up to 8 wide, and an icon saved
+ * with one still has to open: a value off the scale is held to its nearer end
+ * rather than refused.
+ */
+export const holdWidth = (width) => Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, Number(width) || MIN_WIDTH));
 
 let counter = 0;
 /** Ids only have to be unique within the tab: nothing outside it sees them. */
@@ -188,7 +199,7 @@ export function fromSvg(text, name = ICON_NAME) {
         stroke: attributes.stroke,
         strokeSwatch: swatch(attributes['data-stroke-swatch']),
         strokeOpacity: percent(attributes['stroke-opacity']),
-        width: Number(attributes['stroke-width']),
+        width: holdWidth(attributes['stroke-width']),
         fill,
         fillSwatch: fill ? swatch(attributes['data-fill-swatch']) : null,
         fillOpacity: percent(attributes['fill-opacity']),

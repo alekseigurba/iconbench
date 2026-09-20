@@ -644,7 +644,8 @@ body {
     var(--paper);
 }
 
-/* Eight across: the blacks and the greys, then domain-map's six families. */
+/* Eight across, and each column a family: a color to draw lines in at the top,
+   and its three fills under it. */
 .swatches {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
@@ -666,11 +667,12 @@ body {
 /* Always open, never behind a button. Saturation runs across the area and
    brightness up it, over the pure hue the strip below is set to (--hue, from
    script). The thumb may hang past the edge, so nothing here clips. */
+/* Under the palette, which is what is reached for first. */
 .picker {
   display: flex;
   flex-direction: column;
   gap: var(--gap-2);
-  margin-bottom: var(--gap-3);
+  margin-top: var(--gap-3);
 }
 
 .picker__area {
@@ -834,7 +836,7 @@ body {
   gap: var(--gap-3);
 }
 
-.palette-editor .picker { margin-bottom: 0; }
+.palette-editor .picker { margin-top: 0; }
 
 .palette-editor__label {
   margin: 0;

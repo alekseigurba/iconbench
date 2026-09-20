@@ -61,6 +61,36 @@ let lastPress = null;
 let spaceHeld = false;
 let handlers = {};
 
+const GRID_KEY = 'iconbench:grid';
+
+/** Whether the pixel grid is drawn. The browser remembers, as it does the pack panel's fold. */
+let gridShown = readGridShown();
+
+function readGridShown() {
+  try {
+    return localStorage.getItem(GRID_KEY) !== 'hidden';
+  } catch {
+    return true;
+  }
+}
+
+export const isGridShown = () => gridShown;
+
+/**
+ * Only the pixel grid comes and goes. The live area and the centre lines are
+ * the brief — 20×20, and even about the middle — and stay; the icon bare of
+ * everything is what the preview is for.
+ */
+export function setGridShown(shown) {
+  gridShown = shown;
+  try {
+    localStorage.setItem(GRID_KEY, shown ? 'shown' : 'hidden');
+  } catch {
+    // Storage switched off: the grid still goes, it just is not remembered.
+  }
+  renderBoard();
+}
+
 const DRAWN_BY_CLICKS = ['straight', 'quadratic', 'catmull'];
 const DRAWN_BY_HAND = ['freehand', 'marker'];
 
@@ -143,7 +173,7 @@ function renderBoard() {
   const size = store.doc.size;
   const live = size - CANVAS_PADDING * 2;
   const board = [el('rect', { class: 'canvas__board', x: 0, y: 0, width: size, height: size })];
-  if (view.scale >= GRID_FROM_SCALE) {
+  if (gridShown && view.scale >= GRID_FROM_SCALE) {
     board.push(el('rect', { class: 'canvas__grid-fill', x: 0, y: 0, width: size, height: size, fill: 'url(#pixel-grid)' }));
   }
   groups.board.replaceChildren(...board);

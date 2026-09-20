@@ -34,6 +34,18 @@ check('the default line is one a file may hold', (() => {
   return documents.validate(doc) === null;
 })());
 check('the default smoothing is one of the levels', SMOOTHING_LEVELS.includes(defaults.SMOOTHING_LEVEL));
+check("a new line is 0.75 wide, on the scale and on the slider's quarter steps",
+  defaults.LINE_STYLE.width === 0.75 && documents.MAX_WIDTH === 4 && (defaults.LINE_STYLE.width / 0.25) % 1 === 0);
+
+// --- the palette's columns ---
+check('the palette is eight columns of four', defaults.PALETTE_SIZE === 32 && defaults.PALETTE_COLUMNS === 8
+  && defaults.PALETTE_ROWS.length * defaults.PALETTE_COLUMNS === defaults.PALETTE_SIZE);
+check('a new line wears the colour that heads the first column', defaults.LINE_STYLE.strokeSwatch === 1);
+check("a first fill is the light tint in the line's own column",
+  [1, 2, 8].every((line) => defaults.firstFillSwatch(line) === line + 16));
+check('whichever row of the column the line colour was taken from',
+  defaults.firstFillSwatch(10) === 18 && defaults.firstFillSwatch(18) === 18 && defaults.firstFillSwatch(32) === 24);
+check("and the grey column's, for a line in a colour of its own", defaults.firstFillSwatch(null) === 17);
 
 // --- writing ---
 const doc = documents.newDocument();
@@ -86,6 +98,8 @@ check('a layer name that only looks like a handler is not', (() => {
 })());
 check('an icon from a newer iconbench says so',
   throwsWith(() => documents.fromSvg(svg.replace('data-iconbench="1"', 'data-iconbench="99"')), 'newer iconbench'));
+check('a line 1.0 drew wider than the scale now runs is held to the widest, not refused',
+  documents.fromSvg(svg.replace('stroke-width="1.5"', 'stroke-width="7"')).layers[0].lines[0].width === documents.MAX_WIDTH);
 check('a line of a kind nobody draws is refused',
   throwsWith(() => documents.fromSvg(svg.replace('data-kind="catmull"', 'data-kind="spiral"')), 'spiral'));
 check('a colour that is not a hex is refused', (() => {

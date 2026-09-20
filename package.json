@@ -1,6 +1,6 @@
 {
   "name": "iconbench",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A minimalistic SVG icon authoring tool: solid lines, fills and layers, and a local library to keep them in.",
   "license": "MIT",
   "private": true,

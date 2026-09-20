@@ -1,9 +1,13 @@
 // Color, in its two places.
 //
 // The panel's color section sets one color — the line's or the fill's,
-// whichever the panel is pointed at. A swatch pressed there is *worn*: the line
-// keeps the swatch's number, and follows the palette from then on. A color made
-// with the picker is the line's own, and follows nothing.
+// whichever the panel is pointed at. The palette comes first, since it is what
+// is reached for most: a swatch pressed there is *worn*, the line keeps its
+// number and follows the palette from then on. Under it, the picker, for a
+// color that is the line's own and follows nothing.
+//
+// The palette is one grid, eight across. A column is a family: a color to draw
+// lines in at the top, and under it three tints of it to fill with.
 //
 // The palette editor changes the palette itself, and so every line in the pack
 // that wears the swatch being edited. It is a modal, as domain-map's is, because
@@ -11,6 +15,7 @@
 
 import * as actions from './store.js';
 import { store } from './store.js';
+import { PALETTE_COLUMNS, PALETTE_ROWS, PALETTE_SIZE } from './defaults.js';
 import { createPicker } from './picker.js';
 import { STOCK_PALETTE } from './stock-palette.js';
 
@@ -25,7 +30,7 @@ function element(tag, className, text) {
 
 let handlers = {};
 let panelPicker;
-let panelGrid;
+let panelSwatches;
 
 /** The swatch the color on show is worn as, counted from 1, or null for a color of the line's own. */
 let shownSwatch = null;
@@ -41,15 +46,15 @@ export function initPalette(container, callbacks) {
   handlers = callbacks;
   container.replaceChildren();
 
+  panelSwatches = buildSwatches(container, {
+    onPress: (i) => handlers.onPick?.(store.pack.palette[i], null, i + 1),
+    titleOf: (i) => `Wear color ${i + 1}`,
+  });
+
   panelPicker = createPicker(container, {
     onPick: (color, key) => handlers.onPick?.(color, key, null),
     onLand: () => handlers.onLand?.(),
   }, 'panel-picker');
-
-  panelGrid = element('div', 'swatches');
-  panelGrid.setAttribute('role', 'group');
-  panelGrid.setAttribute('aria-label', 'Pack palette');
-  container.append(panelGrid);
 
   buildEditor();
 }
@@ -57,31 +62,46 @@ export function initPalette(container, callbacks) {
 /** Point the section at a color, and at the swatch it is worn as, if it is. */
 export function showColor(color, swatch = null) {
   shownSwatch = color ? swatch : null;
+  panelSwatches.paint(shownSwatch === null ? -1 : shownSwatch - 1);
   panelPicker.show(color);
-  paintGrid(panelGrid, shownSwatch === null ? -1 : shownSwatch - 1, (i) => {
-    handlers.onPick?.(store.pack.palette[i], null, i + 1);
-  }, (i) => `Wear color ${i + 1}`);
 }
 
 /**
- * The swatches, repainted in place while the count holds: a button rebuilt
+ * The palette's swatches. Built once and repainted in place: a button rebuilt
  * between pointerdown and pointerup never gets its click.
+ *
+ * @param options.onPress hears the index of the swatch pressed, counted from 0
+ * @param options.titleOf says what pressing swatch `i` does, for its tooltip
  */
-function paintGrid(grid, pressed, onPress, titleOf) {
-  const { palette } = store.pack;
-  if (grid.children.length !== palette.length) {
-    grid.replaceChildren(...palette.map((_, i) => {
-      const button = element('button', 'swatch');
-      button.type = 'button';
-      button.addEventListener('click', () => onPress(i));
-      return button;
-    }));
-  }
-  [...grid.children].forEach((button, i) => {
-    button.style.background = palette[i];
-    button.title = `${titleOf(i)} — ${palette[i]}`;
-    button.setAttribute('aria-pressed', String(i === pressed));
+function buildSwatches(parent, { onPress, titleOf }) {
+  const grid = element('div', 'swatches');
+  grid.setAttribute('role', 'group');
+  grid.setAttribute('aria-label', 'Pack palette: a line color heads each column, its fills are under it');
+
+  const buttons = Array.from({ length: PALETTE_SIZE }, (_, i) => {
+    const button = element('button', 'swatch');
+    button.type = 'button';
+    button.addEventListener('click', () => onPress(i));
+    return button;
   });
+  grid.append(...buttons);
+  parent.append(grid);
+
+  return {
+    /** Show the palette as it stands, with swatch `pressed` (from 0, or -1 for none) marked. */
+    paint(pressed) {
+      const { palette } = store.pack;
+      buttons.forEach((button, i) => {
+        // What the row is for rides on the tooltip: the top of a column is for
+        // lines, the rest of it is that line's fills.
+        const role = PALETTE_ROWS[Math.floor(i / PALETTE_COLUMNS)];
+        button.style.background = palette[i];
+        button.title = `${titleOf(i)}, ${role} — ${palette[i]}`;
+        button.setAttribute('aria-pressed', String(i === pressed));
+      });
+    },
+    focus: (i) => buttons[i]?.focus(),
+  };
 }
 
 // --- the palette editor -------------------------------------------------------------
@@ -95,7 +115,7 @@ let active = 0;
 let pressedBackdrop = false;
 
 let editorPicker;
-let editorGrid;
+let editorSwatches;
 let editorCaption;
 
 /** Open on one swatch: the one the line in hand wears, or whichever was edited last. */
@@ -104,7 +124,7 @@ export function openPaletteEditor(swatch = null) {
   if (swatch) active = swatch - 1;
   paintEditor();
   dialog.showModal();
-  editorGrid.children[active]?.focus();
+  editorSwatches.focus(active);
 }
 
 /** Keep an open editor in step with the pack: after an edit, a reset, another pack. */
@@ -114,10 +134,7 @@ export function renderPaletteEditor() {
 
 function paintEditor() {
   active = Math.min(Math.max(active, 0), store.pack.palette.length - 1);
-  paintGrid(editorGrid, active, (i) => {
-    active = i;
-    paintEditor();
-  }, (i) => `Edit color ${i + 1}`);
+  editorSwatches.paint(active);
   editorCaption.textContent = `Color ${active + 1} — changes every line that wears it, in every icon of ${store.pack.name}`;
   editorPicker.show(store.pack.palette[active]);
 }
@@ -126,14 +143,17 @@ function buildEditor() {
   const title = element('h2', 'dialog__title', 'Edit palette');
   title.id = 'palette-title';
 
-  editorGrid = element('div', 'swatches');
-  editorGrid.setAttribute('role', 'group');
-  editorGrid.setAttribute('aria-label', 'The color to edit');
+  const column = element('div', 'palette-editor');
+  editorSwatches = buildSwatches(column, {
+    onPress: (i) => {
+      active = i;
+      paintEditor();
+    },
+    titleOf: (i) => `Edit color ${i + 1}`,
+  });
 
   editorCaption = element('p', 'palette-editor__label');
-
-  const column = element('div', 'palette-editor');
-  column.append(editorGrid, editorCaption);
+  column.append(editorCaption);
   // A drag is shown the whole way, swatch and icon both, and the pack's files
   // are only rewritten once the editor is shut — so nothing here needs landing.
   editorPicker = createPicker(column, {

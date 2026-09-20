@@ -7,7 +7,7 @@
 
 import * as actions from './store.js';
 import { store, subscribe } from './store.js';
-import { FIRST_FILL } from './defaults.js';
+import { firstFillSwatch } from './defaults.js';
 import { MAX_WIDTH, MIN_WIDTH } from './document.js';
 import { SMOOTHING_LEVELS, anchorCount } from './geometry.js';
 import { initPalette, openPaletteEditor, renderPaletteEditor, showColor } from './palette.js';
@@ -180,8 +180,10 @@ function buildFill(body) {
   controls.filled.type = 'checkbox';
   controls.filled.addEventListener('change', () => {
     if (controls.filled.checked) {
-      const first = { ...FIRST_FILL, fill: store.pack.palette[FIRST_FILL.fillSwatch - 1] };
-      actions.setStyle(lastFill ?? first);
+      // Switched on for the first time, a fill is the light tint of the family
+      // the line is drawn in, so the two belong together without being chosen.
+      const fillSwatch = firstFillSwatch(actions.currentStyle().strokeSwatch);
+      actions.setStyle(lastFill ?? { fill: store.pack.palette[fillSwatch - 1], fillSwatch });
       actions.setTarget('fill');
     } else {
       const { fill, fillSwatch } = actions.currentStyle();

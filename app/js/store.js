@@ -7,7 +7,7 @@
 
 import * as history from './history.js';
 import { LAYER_NAME, LINE_STYLE, PACK_NAME, SMOOTHING_LEVEL } from './defaults.js';
-import { MAX_LAYERS, newDocument, newLayer, newLine, validate } from './document.js';
+import { MAX_LAYERS, holdWidth, newDocument, newLayer, newLine, validate } from './document.js';
 import { insertPoint, isDrawable, pointsWhenClosed, removePoint, translate } from './geometry.js';
 import { applyPalette, newPack, tidyPalette } from './pack.js';
 import { STOCK_PALETTE } from './stock-palette.js';
@@ -20,8 +20,10 @@ export const store = {
   /** The icon: `{ version, name, size, layers }`, layers bottom first. */
   doc: newDocument(),
   /**
-   * The drawing guide: a pasted picture and marker lines, under the icon. It
-   * is the tab's, not the icon's — it is never in a saved file.
+   * The drawing guide: a pasted picture and marker lines, under the icon. Each
+   * icon has its own, but it is the tab's to keep — it is never in a saved
+   * file. This is the one for the icon on the canvas; the rest wait on the
+   * shelf, below.
    */
   sketch: emptySketch(),
   activeLayerId: null,
@@ -45,6 +47,30 @@ export const store = {
 };
 
 store.activeLayerId = store.doc.layers[0].id;
+
+// --- a sketch for every icon ---------------------------------------------------
+
+/**
+ * The sketches of the icons that are not on the canvas, by `pack/icon`. An icon
+ * left and come back to finds its sketch as it was. The shelf lasts as long as
+ * the tab: it is kept with the tab's other unsaved work, and goes when the tab
+ * does.
+ */
+let shelf = {};
+
+/** Where the sketch on the canvas goes when its icon is left: null for an icon with no name yet. */
+let sketchKey = null;
+
+const keyFor = (fileName) => (fileName ? `${store.pack.name}/${fileName}` : null);
+
+const isBare = (sketch) => !sketch.image && sketch.marks.length === 0;
+
+/** Put the canvas's sketch on the shelf under its icon's name. An empty one takes no room. */
+function shelve() {
+  if (!sketchKey) return;
+  if (isBare(store.sketch)) delete shelf[sketchKey];
+  else shelf[sketchKey] = store.sketch;
+}
 
 export function subscribe(listener) {
   listeners.add(listener);
@@ -131,6 +157,12 @@ export function countLines() {
  * one whose file is older than the last palette edit, wears what the rest do.
  */
 export function setDocument(doc, fileName = null) {
+  // The sketch belongs to the icon, so it leaves with the one going and the one
+  // arriving brings its own — empty, for an icon never sketched over.
+  shelve();
+  sketchKey = keyFor(fileName);
+  store.sketch = shelf[sketchKey] ?? emptySketch();
+
   applyPalette(doc, store.pack.palette);
   store.doc = doc;
   store.activeLayerId = doc.layers.at(-1).id;
@@ -141,6 +173,10 @@ export function setDocument(doc, fileName = null) {
 }
 
 export function markSaved(fileName) {
+  // Saved under another name, the canvas's sketch goes on with the new icon and
+  // a copy stays with the old: both were drawn over it.
+  shelve();
+  sketchKey = keyFor(fileName);
   store.doc.name = fileName;
   store.file = { name: fileName, dirty: false };
   emit('file');
@@ -148,8 +184,14 @@ export function markSaved(fileName) {
 
 /** The icon's file has gone from the pack: what is on the canvas is unsaved work again. */
 export function forgetFile() {
+  sketchKey = null;
   store.file = { name: null, dirty: true };
   emit('file');
+}
+
+/** An icon has been deleted from the pack: its sketch has nothing left to be a guide to. */
+export function forgetSketch(fileName) {
+  delete shelf[keyFor(fileName)];
 }
 
 // --- the pack ----------------------------------------------------------------------------
@@ -161,6 +203,24 @@ export function setPack(pack, icons = []) {
   // would wear the last pack's colour under this one's swatch number.
   store.style = wearing(store.style);
   emit('pack');
+}
+
+/**
+ * The open pack has a new name. Its sketches are shelved by pack, so they are
+ * moved along with it.
+ */
+export function renamePack(name) {
+  const from = `${store.pack.name}/`;
+  shelf = Object.fromEntries(Object.entries(shelf).map(([key, sketch]) =>
+    [key.startsWith(from) ? `${name}/${key.slice(from.length)}` : key, sketch]));
+  if (sketchKey?.startsWith(from)) sketchKey = `${name}/${sketchKey.slice(from.length)}`;
+  store.pack = { ...store.pack, name };
+  emit('pack');
+}
+
+/** A pack has been deleted: so have the sketches that went with its icons. */
+export function forgetPackSketches(name) {
+  shelf = Object.fromEntries(Object.entries(shelf).filter(([key]) => !key.startsWith(`${name}/`)));
 }
 
 /** The pack's list of icons, as the store now has it. */
@@ -406,6 +466,27 @@ export function renameLayer(id, name) {
   changed();
 }
 
+/** Can the layer go one place up the pile (1) or down it (-1)? */
+export function canMoveLayer(id, by) {
+  const from = store.doc.layers.findIndex((layer) => layer.id === id);
+  return from >= 0 && from + by >= 0 && from + by < store.doc.layers.length;
+}
+
+/**
+ * One place up the pile or down it. Layers are kept bottom first, so up the
+ * pile is later in the list — and later in the file, which is what paints over
+ * what.
+ */
+export function moveLayer(id, by) {
+  if (!canMoveLayer(id, by)) return;
+  history.record(by > 0 ? 'Move a layer up' : 'Move a layer down');
+  const { layers } = store.doc;
+  const from = layers.findIndex((layer) => layer.id === id);
+  const [layer] = layers.splice(from, 1);
+  layers.splice(from + by, 0, layer);
+  changed();
+}
+
 /** The last layer stays: an icon with nowhere to draw is not an icon. */
 export function deleteLayer(id) {
   if (store.doc.layers.length <= 1 || !layerById(id)) return;
@@ -479,22 +560,34 @@ const SESSION_KEY = 'iconbench:tab';
  * is kept without it rather than not at all.
  */
 export function keep() {
+  shelve();
   const state = {
     doc: store.doc,
     sketch: store.sketch,
+    shelf,
     file: store.file,
     packName: store.pack.name,
     activeLayerId: store.activeLayerId,
     style: store.style,
     smoothing: store.smoothing,
   };
-  try {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(state));
-  } catch {
+  // Pictures are what fill the storage, so they are what goes when it is full:
+  // first the ones on the shelf, then the one on the canvas. The icon itself,
+  // and every marker line, is kept before any picture is.
+  const withoutPictures = (sketches) => Object.fromEntries(
+    Object.entries(sketches).map(([key, sketch]) => [key, { ...sketch, image: null }]));
+  const attempts = [
+    state,
+    { ...state, shelf: withoutPictures(shelf) },
+    { ...state, shelf: withoutPictures(shelf), sketch: { ...store.sketch, image: null } },
+  ];
+  for (const attempt of attempts) {
     try {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ ...state, sketch: { ...store.sketch, image: null } }));
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(attempt));
+      return;
     } catch {
-      // Storage is full or switched off: the work is still on the page.
+      // Too big, or storage is switched off: try with less, and failing that
+      // the work is still on the page.
     }
   }
 }
@@ -506,9 +599,21 @@ export function keep() {
 export function takeUpKept() {
   try {
     const state = JSON.parse(sessionStorage.getItem(SESSION_KEY) ?? 'null');
-    if (!state || state.packName !== store.pack.name || validate(state.doc)) return false;
+    if (!state) return false;
+    // The shelf is taken up whichever pack is open: its sketches are for icons
+    // that are not on the canvas, in this pack or another.
+    shelf = Object.fromEntries(Object.entries(state.shelf ?? {})
+      .map(([key, sketch]) => [key, { ...emptySketch(), ...sketch }]));
+
+    // A line kept from before the scale was shortened is held to it, as one
+    // read from a file is, rather than costing the whole of the unsaved icon.
+    for (const layer of state.doc?.layers ?? []) {
+      for (const line of layer.lines ?? []) line.width = holdWidth(line.width);
+    }
+    if (state.packName !== store.pack.name || validate(state.doc)) return false;
     store.doc = state.doc;
     store.sketch = { ...emptySketch(), ...state.sketch };
+    sketchKey = keyFor(state.file?.name ?? null);
     store.file = { name: state.file?.name ?? null, dirty: Boolean(state.file?.dirty) };
     store.style = { ...LINE_STYLE, ...state.style };
     store.smoothing = state.smoothing ?? SMOOTHING_LEVEL;

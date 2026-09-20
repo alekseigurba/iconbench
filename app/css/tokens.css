@@ -81,45 +81,58 @@
   --gap-4: var(--space-100);
 
   /* The stock palette: 32 inks, in the order the swatch grid shows them — eight
-     across, four down. The first two columns are the blacks and the greys an
-     icon is mostly drawn in; the six after them are domain-map's 24 fills, each
-     column one family: greens, blues, pinks and purples, yellows, oranges and
-     browns, reds. */
-  --c1:  #000000;
-  --c2:  #686868;
-  --c3:  #86a27b;
-  --c4:  #7fc6d8;
-  --c5:  #e8bbd5;
-  --c6:  #fede49;
-  --c7:  #b06a46;
-  --c8:  #f57a8c;
+     across, four down. Each column is a family, and reads downwards the way it
+     is used: a colour to draw lines in, then three tints of it to fill with —
+     medium, light, lightest, at 30, 70 and 85% of the way to white, which is how
+     domain-map's own brand scale steps. Grey keeps domain-map's charcoals
+     instead, and the green is its brand 400, 300, 200 and 100.
 
-  --c9:  #141414;
-  --c10: #9a9a9a;
-  --c11: #51a45c;
-  --c12: #3c94a3;
-  --c13: #a1a4ec;
-  --c14: #fee986;
-  --c15: #d36e3b;
-  --c16: #e08aac;
+     Eight line colours, every one dark enough to hold as a fine line on paper:
+     grey, burnt orange and brand green first, then on round the wheel from the
+     green — teal, blue, purple, red, ochre.
 
-  --c17: #282828;
-  --c18: #c9c9c9;
-  --c19: #77bc80;
-  --c20: #5985ab;
-  --c21: #a86cd1;
-  --c22: #d3b23b;
-  --c23: #f2c3aa;
-  --c24: #f66598;
+     A swatch is kept in a file by its number, counted across the rows, so
+     column k is --c(k), --c(k+8), --c(k+16) and --c(k+24). */
 
-  --c25: #3d3d3d;
-  --c26: #ffffff;
-  --c27: #0d9c08;
-  --c28: #aedbe6;
-  --c29: #a85bad;
-  --c30: #f1982b;
-  --c31: #9f4e4e;
-  --c32: #d86161;
+  /* line */
+  --c1:  #282828;
+  --c2:  #c4561e;
+  --c3:  #527a42;
+  --c4:  #2a7f78;
+  --c5:  #2f6690;
+  --c6:  #6b4fa0;
+  --c7:  #b3362d;
+  --c8:  #a5790f;
+
+  /* medium */
+  --c9:  #686868;
+  --c10: #d68962;
+  --c11: #86a27b;
+  --c12: #6aa5a1;
+  --c13: #6d94b1;
+  --c14: #9784bd;
+  --c15: #ca726c;
+  --c16: #c0a157;
+
+  /* light */
+  --c17: #c9c9c9;
+  --c18: #edccbc;
+  --c19: #cbd7c6;
+  --c20: #bfd9d7;
+  --c21: #c1d1de;
+  --c22: #d3cae3;
+  --c23: #e8c3c0;
+  --c24: #e4d7b7;
+
+  /* lightest */
+  --c25: #ececec;
+  --c26: #f6e6dd;
+  --c27: #e5ebe3;
+  --c28: #dfeceb;
+  --c29: #e0e8ee;
+  --c30: #e9e5f1;
+  --c31: #f4e1e0;
+  --c32: #f2ebdb;
 
   /* Canvas ink: what the editor draws that is not the icon. */
   --grid: rgba(40, 40, 40, 0.10);

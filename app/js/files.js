@@ -98,6 +98,44 @@ export const writeIcon = (pack, name, svg) => putFile(iconKey(pack, name), svg, 
 
 export const deleteIcon = (pack, name) => deleteFile(iconKey(pack, name));
 
+/**
+ * The keys of a pack that are the library's own: its icons and its pack.json.
+ * Anything else put in the folder by hand is left be, as the server leaves it —
+ * it would refuse to write or delete it anyway, and a rename stopped halfway by
+ * a stray notes.txt is worse than one that leaves the notes behind.
+ */
+async function packKeys(pack) {
+  const prefix = `${PACKS_PREFIX}${pack}/`;
+  return (await listFiles(prefix))
+    .map((object) => object.key)
+    .filter((key) => {
+      const file = key.slice(prefix.length);
+      return !file.includes('/') && (file === PACK_FILE || file.endsWith('.svg'));
+    });
+}
+
+/**
+ * Give a pack another name. The store can get, put, delete and list, and that
+ * is all it is asked to do here: every file is copied under the new name first,
+ * and only once all of them are there are the old ones taken away. A rename cut
+ * short halfway leaves two packs, never half of one.
+ */
+export async function renamePack(from, to) {
+  const keys = await packKeys(from);
+  const moved = (key) => `${PACKS_PREFIX}${to}/${key.slice(`${PACKS_PREFIX}${from}/`.length)}`;
+  for (const key of keys) {
+    const response = await getFile(key);
+    if (!response) continue;
+    await putFile(moved(key), await response.blob(), response.headers.get('Content-Type') ?? undefined);
+  }
+  for (const key of keys) await deleteFile(key);
+}
+
+/** Take a pack away, file by file. The store drops the folder with the last of them. */
+export async function deletePack(pack) {
+  for (const key of await packKeys(pack)) await deleteFile(key);
+}
+
 /** A name nothing else has, so an icon brought in never overwrites one that is there. */
 export function freeName(name, taken) {
   if (!taken.includes(name)) return name;
