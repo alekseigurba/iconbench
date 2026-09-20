@@ -29,6 +29,18 @@ To keep it in a folder you can see instead, swap the volume in
 anywhere you like — a folder in a git repo, say, which is also the simplest way
 to have one library on two machines.
 
+### Or do not run it at all
+
+The last release is at <https://alekseigurba.github.io/iconbench/>, served by
+GitHub Pages out of [docs/app/](docs/app/). Pages serves files and nothing else,
+so there the library is **kept in your browser** — the footer says so. It is one
+browser's, on one machine, and clearing the site's data deletes it: **Save pack
+to…** writes a pack to a file that is yours, and **Load pack from…** brings it
+back, there or anywhere. It needs a browser from 2023 or later (Firefox: 147),
+and a network.
+
+Any host that serves static files will do the same with a copy of `app/`.
+
 ## Draw
 
 The canvas is a 24×24 artboard, the size Material, Lucide, Feather, Tabler,
@@ -135,13 +147,17 @@ storage/packs/<pack>/pack.json      the pack's palette
 storage/packs/<pack>/<icon>.svg
 ```
 
+In a browser, on Pages, it is the same keys and the same bytes in IndexedDB.
+
 ## Working on it
 
 ```bash
 npm test
 ```
 
-Plain scripts, no runner: the line maths, the file format, the packs, and the
-real server over a throwaway folder. [CLAUDE.md](CLAUDE.md) has the architecture
+Plain scripts, no runner: the line maths, the file format, the packs, the real
+server over a throwaway folder, and the service worker's answers put through the
+same checks as the server's. `npm run build:pages` makes the copy Pages serves;
+it is part of cutting a release. [CLAUDE.md](CLAUDE.md) has the architecture
 rules, [design-system.md](design-system.md) the tokens and the chrome, and
 [docs/releases/BACKLOG.md](docs/releases/BACKLOG.md) the plan.

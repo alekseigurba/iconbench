@@ -282,6 +282,12 @@ keys that go with it; on the right, where the pointer is in canvas pixels, the
 icon's counts, and a status line that clears itself after a couple of seconds.
 The numbers run on tabular figures so they do not jitter as they change.
 
+Where there is no server and the library is the browser's own — on GitHub Pages —
+the row ends with a note, `.footer__note`: *Library kept in this browser*. It is
+last so that it stays put in the corner while the rest comes and goes, and wears
+a dotted underline in `--line-strong` and a help cursor, because the rest of what
+there is to say is in its title. Served by `npm start` it is not there at all.
+
 ## Documents
 
 An icon is saved as the SVG it is — 24×24, `fill="none"`, round caps and joins —

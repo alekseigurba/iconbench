@@ -1,0 +1,328 @@
+/* The stage, and everything the editor draws on it that is not the icon: the
+   artboard and its grid, the live area, the handles on a selected line, the
+   line being drawn. The icon itself is painted by attributes, exactly as it is
+   written to a file, so nothing here can make the canvas disagree with it.
+
+   Hairlines and handles are sized in script from the zoom, since a 24px canvas
+   is looked at anywhere from one screen pixel to forty to the unit. */
+
+.stage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--stage);
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;      /* pan, zoom and a pencil's strokes are handled here */
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+}
+
+/* The cursor carries the tool: an arrow to pick things up, a crosshair to draw. */
+.canvas[data-tool="straight"],
+.canvas[data-tool="quadratic"],
+.canvas[data-tool="catmull"],
+.canvas[data-tool="freehand"],
+.canvas[data-tool="marker"] { cursor: crosshair; }
+
+.canvas[data-panning="ready"] { cursor: grab; }
+.canvas[data-panning="true"] { cursor: grabbing; }
+
+/* --- the artboard ---------------------------------------------------------- */
+
+.canvas__board {
+  fill: var(--paper);
+  stroke: var(--line-strong);
+  vector-effect: non-scaling-stroke;
+  stroke-width: 1px;
+}
+
+.canvas__grid,
+.canvas__grid-fill { pointer-events: none; }
+
+/* Its width is set in script, from the zoom: inside a pattern a stroke does not
+   reliably stay a hairline on its own. */
+.canvas__grid {
+  fill: none;
+  stroke: var(--grid);
+}
+
+/* Where the artwork belongs: 20 of the 24 pixels, with two clear all round. */
+.canvas__live-area {
+  fill: none;
+  stroke: var(--live-area);
+  stroke-dasharray: 4 3;
+  vector-effect: non-scaling-stroke;
+  stroke-width: 1px;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* The two centre lines, fainter than the live area: something to be even about. */
+.canvas__centre {
+  stroke: var(--live-area);
+  vector-effect: non-scaling-stroke;
+  stroke-width: 1px;
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+/* --- the sketch -------------------------------------------------------------- */
+
+/* A guide to draw over, never part of the icon, and never in the pointer's way. */
+#layer-sketch { pointer-events: none; }
+#layer-sketch[data-dimmed="true"] { opacity: 0.35; }
+
+.sketch__mark {
+  fill: none;
+  stroke: var(--marker);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* --- the icon's layers ------------------------------------------------------- */
+
+.layer[data-dimmed="true"] { opacity: 0.25; }
+
+/* Only the layer being worked on answers the pointer. */
+.layer { pointer-events: none; }
+
+/* A line is hard to hit at 1px, so each carries a broad unseen copy of itself
+   that is what the pointer actually lands on. */
+.line__hit {
+  fill: none;
+  stroke: transparent;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.layer[data-active="true"] .line__hit { pointer-events: stroke; cursor: move; }
+.layer[data-active="true"] .line__hit[data-filled="true"] { pointer-events: all; }
+
+/* While a line is being drawn the canvas is for clicking on, not for picking up
+   what is already there. */
+.canvas:not([data-tool="select"]) .line__hit { pointer-events: none !important; }
+
+/* --- editing ----------------------------------------------------------------- */
+
+.edit__outline {
+  fill: none;
+  stroke: var(--selection);
+  vector-effect: non-scaling-stroke;
+  stroke-width: 1px;
+  pointer-events: none;
+}
+
+/* From a control to the anchors either side: what it is pulling on. */
+.edit__arm {
+  stroke: var(--selection);
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+  stroke-width: 1px;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.edit__handle {
+  fill: var(--paper);
+  stroke: var(--selection);
+  vector-effect: non-scaling-stroke;
+  stroke-width: 1.5px;
+  cursor: pointer;
+}
+
+.edit__handle:hover,
+.edit__handle[data-held="true"] { fill: var(--selection); }
+
+/* Handles are shown while drawing too, so the last line can be read, but they
+   are only there to be dragged with the select tool in hand. */
+.canvas:not([data-tool="select"]) .edit__handle { pointer-events: none; }
+
+.draft__line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.draft__point {
+  fill: var(--selection);
+  pointer-events: none;
+}
+
+/* Click here and the line closes: the first point says so as the pointer nears. */
+.draft__point--closes {
+  fill: var(--paper);
+  stroke: var(--selection);
+  vector-effect: non-scaling-stroke;
+  stroke-width: 2px;
+}
+
+/* --- stage chrome ------------------------------------------------------------ */
+
+.zoom {
+  position: absolute;
+  right: var(--gap-3);
+  bottom: var(--gap-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-1);
+}
+
+/* The grid's switch heads the stack, a step apart from the three that zoom. Off,
+   it goes as quiet as the grid has. */
+#grid-toggle { margin-bottom: var(--gap-2); }
+#grid-toggle[aria-pressed="false"] { color: var(--ink-soft); opacity: 0.6; }
+
+/* The icon as it will be met: small, on paper, with no grid to flatter it. */
+.preview {
+  position: absolute;
+  top: var(--gap-3);
+  right: var(--gap-3);
+  display: flex;
+  align-items: flex-end;
+  gap: var(--gap-3);
+  padding: var(--gap-2) var(--gap-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-m);
+  background: var(--paper);
+  pointer-events: none;
+}
+
+.preview svg { display: block; }
+
+/* --- the layer control ------------------------------------------------------- */
+
+/* Bottom left, as in domain-map: one row per layer, topmost first, reading
+   `name · working on · dim · eye`, and the sketch at the foot of the pile,
+   which is where it lies. */
+.layers {
+  position: absolute;
+  left: var(--gap-3);
+  bottom: var(--gap-3);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 170px;
+  max-height: calc(100% - 2 * var(--gap-3));
+  padding: var(--gap-1);
+  overflow-y: auto;
+  font-size: var(--fs-xs);
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-m);
+}
+
+.layers__head {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 2px 2px var(--gap-1);
+}
+
+.layers__title {
+  flex: 1;
+  font-size: 11px;
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.layers__row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius-s);
+}
+
+/* The sketch is not one of the icon's layers, and a rule says so. */
+.layers__row--sketch {
+  margin-top: 2px;
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+}
+
+.layers__name {
+  flex: 1;
+  min-width: 0;
+  max-width: 160px;
+  padding: 0 var(--gap-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+  cursor: default;
+}
+
+/* Renaming happens in place, in a field the size of the name it replaces. */
+.layers__rename {
+  flex: 1;
+  min-width: 0;
+  width: 100px;
+  height: 20px;
+  padding: 0 var(--gap-1);
+  border: 1px solid var(--selection);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  font-size: inherit;
+}
+
+/* A hidden layer says so: the row goes as quiet as the layer has. */
+.layers__row--hidden .layers__name {
+  color: var(--ink-soft);
+  text-decoration: line-through;
+}
+
+.layers__row--dimmed .layers__name { color: var(--ink-soft); }
+
+/* The layer being worked on. Only one at a time. */
+.layers__row--selected { background: color-mix(in srgb, var(--selection) 12%, transparent); }
+.layers__row--selected .layers__name { font-weight: var(--fw-semibold); }
+
+.layers__btn {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  color: var(--ink-soft);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-s);
+  cursor: pointer;
+}
+
+.layers__btn:hover:not(:disabled) {
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+
+.layers__btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.layers__btn[aria-pressed="true"] { color: var(--ink); }
+
+.layers__btn .icon {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Picked: the tick and its box take the selection's own colour. */
+.layers__pick[aria-pressed="true"] { color: var(--selection); }

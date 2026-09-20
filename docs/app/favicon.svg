@@ -1,0 +1,12 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- An artboard with one curve run through three bends: the bench, in one mark. -->
+  <g fill="none" stroke="#527A42" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="6" y="6" width="52" height="52" rx="11"/>
+    <path d="M16 42C20 22 28 18 32 32s12 10 16-10"/>
+  </g>
+  <g fill="#527A42">
+    <circle cx="16" cy="42" r="4.4"/>
+    <circle cx="32" cy="32" r="4.4"/>
+    <circle cx="48" cy="22" r="4.4"/>
+  </g>
+</svg>

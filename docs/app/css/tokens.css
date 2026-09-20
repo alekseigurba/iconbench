@@ -1,0 +1,173 @@
+/* Design system: the raw tokens, with a semantic layer on top naming what each
+   one does here. They are domain-map's, cut down to the ones this page uses, so
+   the two tools read as one family. The prose version lives in design-system.md
+   at the repo root — keep the two in step. */
+
+:root {
+  /* --- raw colours --------------------------------------------------------- */
+  --r-brand-200: #cbd7c6;
+  --r-brand-400: #527a42;   /* the brand green: the logo, and nothing louder */
+
+  --r-haze-200: #f3f1f0;
+  --r-haze-500: #d4d1cf;
+
+  /* haze tinted toward the brand green: the chrome's surfaces and lines */
+  --r-sage-200: #f1f4ef;
+  --r-sage-400: #e4e9e1;
+  --r-sage-500: #d3dbcf;
+  --r-sage-600: #bcc6b7;
+
+  --r-charcoal-300: #686868;
+  --r-charcoal-400: #282828;
+  --r-charcoal-600: #000000;
+
+  --r-neutral-white: #ffffff;
+  --r-ember-400: #ef706b;
+  --r-orange-400: #ff7429;
+  --r-red-400: #b00c15;
+  --r-red-100: #fef6f6;
+  --r-focused-400: #0071e3;
+
+  /* --- type ---------------------------------------------------------------- */
+  --font-heading: "Poppins";
+  --font-text: "Poppins";
+
+  --fs-200: 13px;
+  --fs-300: 14px;
+  --fs-400: 16px;
+  --fs-500: 22px;
+
+  --fw-regular: 400;
+  --fw-semibold: 600;
+
+  --lh-s: 1.2;
+  --lh-m: 1.5;
+
+  /* --- spacing, radius, icons ---------------------------------------------- */
+  --space-025: 0.25rem;  /* 4px */
+  --space-050: 0.5rem;   /* 8px */
+  --space-075: 0.75rem;  /* 12px */
+  --space-100: 1rem;     /* 16px */
+
+  --radius-s: 0.25rem;
+  --radius-m: 0.5rem;
+  --radius-l: 0.75rem;
+
+  --icon-s: 16px;
+  --icon-m: 24px;
+  --icon-l: 32px;
+
+  /* --- what they mean here -------------------------------------------------- */
+  --ink: var(--r-charcoal-400);
+  --ink-soft: var(--r-charcoal-300);
+  --ink-invert: var(--r-neutral-white);
+  --paper: var(--r-neutral-white);   /* the artboard, and controls sitting on chrome */
+  --stage: var(--r-haze-200);        /* the desk the artboard lies on */
+  --chrome: var(--r-sage-200);       /* header, footer, toolbox, panel */
+  --chrome-hover: var(--r-sage-400);
+  --line: var(--r-sage-500);
+  --line-strong: var(--r-sage-600);
+  --selection: var(--r-focused-400);
+  --selected-row: var(--r-brand-200);
+  --danger: var(--r-red-100);
+
+  --fs-xs: var(--fs-200);
+  --fs-s: var(--fs-300);
+  --fs-m: var(--fs-500);
+
+  --gap-1: var(--space-025);
+  --gap-2: var(--space-050);
+  --gap-3: var(--space-075);
+  --gap-4: var(--space-100);
+
+  /* The stock palette: 32 inks, in the order the swatch grid shows them — eight
+     across, four down. Each column is a family, and reads downwards the way it
+     is used: a colour to draw lines in, then three tints of it to fill with —
+     medium, light, lightest, at 30, 70 and 85% of the way to white, which is how
+     domain-map's own brand scale steps. Grey keeps domain-map's charcoals
+     instead, and the green is its brand 400, 300, 200 and 100.
+
+     Eight line colours, every one dark enough to hold as a fine line on paper:
+     grey, burnt orange and brand green first, then on round the wheel from the
+     green — teal, blue, purple, red, ochre.
+
+     A swatch is kept in a file by its number, counted across the rows, so
+     column k is --c(k), --c(k+8), --c(k+16) and --c(k+24). */
+
+  /* line */
+  --c1:  #282828;
+  --c2:  #c4561e;
+  --c3:  #527a42;
+  --c4:  #2a7f78;
+  --c5:  #2f6690;
+  --c6:  #6b4fa0;
+  --c7:  #b3362d;
+  --c8:  #a5790f;
+
+  /* medium */
+  --c9:  #686868;
+  --c10: #d68962;
+  --c11: #86a27b;
+  --c12: #6aa5a1;
+  --c13: #6d94b1;
+  --c14: #9784bd;
+  --c15: #ca726c;
+  --c16: #c0a157;
+
+  /* light */
+  --c17: #c9c9c9;
+  --c18: #edccbc;
+  --c19: #cbd7c6;
+  --c20: #bfd9d7;
+  --c21: #c1d1de;
+  --c22: #d3cae3;
+  --c23: #e8c3c0;
+  --c24: #e4d7b7;
+
+  /* lightest */
+  --c25: #ececec;
+  --c26: #f6e6dd;
+  --c27: #e5ebe3;
+  --c28: #dfeceb;
+  --c29: #e0e8ee;
+  --c30: #e9e5f1;
+  --c31: #f4e1e0;
+  --c32: #f2ebdb;
+
+  /* Canvas ink: what the editor draws that is not the icon. */
+  --grid: rgba(40, 40, 40, 0.10);
+  --live-area: var(--r-ember-400);
+  --marker: var(--r-orange-400);
+
+  /* Chrome controls: every panel button is one of these. */
+  --chip-h: 24px;
+  --chip-radius: var(--radius-m);
+  --toolbox-w: 44px;
+  --rail-w: 28px;             /* what is left of a collapsed panel */
+  --panel-w: 250px;
+}
+
+* { box-sizing: border-box; }
+
+/* A `display` rule in author CSS beats the UA's [hidden] { display: none },
+   so anything flex or grid would stay on screen while marked hidden. */
+[hidden] { display: none !important; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-text);
+  font-size: var(--fs-400);
+  line-height: var(--lh-m);
+  color: var(--ink);
+  background: var(--paper);
+  overflow: hidden; /* the artboard fits the screen; nothing scrolls but the panel */
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+  color: var(--ink);
+}

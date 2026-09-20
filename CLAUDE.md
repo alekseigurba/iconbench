@@ -45,9 +45,10 @@ file holds only what the code and the docs do not say. Read the pointers first.
   before adding one.
 - `app/js/store.js` is the single source of truth. Every change to the icon is
   an action there; toolbox, panel, layer control and canvas read from it.
-- `app/js/geometry.js`, `app/js/color.js`, `app/js/document.js` and
-  `app/js/pack.js` are pure: no DOM, no store. Line maths, the file format and
-  pack recolouring live there so they run headless under test — and so the
+- `app/js/geometry.js`, `app/js/color.js`, `app/js/document.js`,
+  `app/js/pack.js`, `app/js/filerules.js` and `app/js/fileapi.js` are pure: no
+  DOM, no store. Line maths, the file format, pack recolouring and what the
+  library will keep live there so they run headless under test — and so the
   server can import them.
 - `app/js/canvas.js` renders and turns gestures into intents. It calls store
   actions and never talks to the API.
@@ -90,6 +91,21 @@ file holds only what the code and the docs do not say. Read the pointers first.
   pack renamed, a pack deleted — is done by the page out of those four calls
   (`files.js`), copying before deleting, so the store stays something S3 could
   stand in for.
+- On a host with no server — GitHub Pages — a service worker stands in for it:
+  `app/sw.js` answers the same four calls out of IndexedDB
+  (`browser-file-store.js`) through `fileapi.js`, the server's handler over
+  again. What may be kept is asked of `filerules.js` by both, and
+  `tests/library-checks.mjs` is run against both, so a change to what the API
+  does is made in both and checked once. `files.js` starts the worker when its
+  first listing is a 404, and only then; served by `npm start` it is never
+  registered. The worker keeps the library and nothing else — the app's own
+  files are never cached by it.
+- `docs/app/` is a byte-for-byte copy of `app/`, made by `npm run build:pages`
+  for Pages to serve. Never edit it by hand, and do not rebuild it as part of a
+  task: it is rebuilt when a release is cut, so the site shows the last release
+  and a change to `app/` is reviewed once. That was the owner's call, over an
+  Actions workflow. Anything Pages needs goes in `app/` itself, so the copy
+  stays a copy.
 
 ## Working agreements
 
@@ -108,7 +124,8 @@ file holds only what the code and the docs do not say. Read the pointers first.
   why — and remove the plan bullet. A known gap listed on a release page is
   removed when it is closed.
 - A release is the `## Unreleased` entries moved under a heading for the
-  version with the date, the same version in `package.json`, and a tag of the
+  version with the date, the same version in `package.json`, `npm run
+  build:pages` so that `docs/app/` is the app being released, and a tag of the
   same name: `v1.0.0`. The owner cuts it; print the commands rather than run
   them.
 

@@ -7,6 +7,27 @@ plan for what comes next is [docs/releases/BACKLOG.md](docs/releases/BACKLOG.md)
 
 ## Unreleased
 
+## 1.2.0 — 2026-09-20
+
+iconbench on GitHub Pages: the same page with no server behind it, and the
+library kept in the browser instead. Served by `npm start` or Docker, nothing
+changes, and the file format is the one it was. Full notes:
+[docs/releases/1.2.0.md](docs/releases/1.2.0.md).
+
+### Added
+- **iconbench on GitHub Pages.** The page now works where there is no server
+  behind it: packs, palettes, saving, renaming and deleting all do what they do
+  at home, with the library kept in the browser's own storage instead of a
+  folder. Served by `npm start` or Docker, nothing changes.
+- **Library kept in this browser**, in the corner of the footer, wherever that
+  is so. A library in the browser is one browser's, on one machine, and goes
+  when the site's data is cleared; hover the note for what the browser has
+  promised. **Save pack to…** is the backup, and the way to another machine.
+- **The browser is asked to keep the library for good**, after the first save.
+  Chrome answers for itself; Firefox asks you.
+- **`npm run build:pages`** copies `app/` into `docs/app/`, which is what Pages
+  serves. It is run when a release is cut, so the site shows the last release.
+
 ## 1.1.0 — 2026-09-20
 
 The first release drawn with: a finer line, a palette with an opinion, a sketch

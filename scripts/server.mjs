@@ -7,22 +7,15 @@ import { readFile } from 'node:fs/promises';
 import { extname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { looksExecutable, safeName } from '../app/js/document.js';
+// What may be kept is not the server's alone to say: the service worker that
+// stands in for it on a host with no server asks the same questions.
+import { DRAWING_ONLY_POLICY, MAX_BODY_BYTES, bodyProblem, keyProblem, tooBig } from '../app/js/filerules.js';
 import { fileStore } from './file-store.mjs';
 
 /** A path inside the repo, wherever it has been checked out. */
 const packagePath = (path) => fileURLToPath(new URL(path, import.meta.url));
 
-/** An icon is a few kilobytes. This is only about not holding junk in memory. */
-const MAX_BODY_BYTES = 1024 * 1024;
-
 const API_PREFIX = '/api/files';
-
-/** The one folder the API writes to: a folder per pack inside it. */
-const PACKS_PREFIX = 'packs/';
-
-/** A pack's palette, kept beside its icons. */
-const PACK_FILE = 'pack.json';
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -63,39 +56,6 @@ function readBody(request) {
 }
 
 /**
- * What is wrong with a key someone wants to write or delete, or null. The
- * library is `packs/<pack>/<icon>.svg` with a `pack.json` beside the icons,
- * every name of it the way `safeName` names things — so that is all the API
- * will touch, and whatever else ends up in the folder is left be.
- */
-function keyProblem(key) {
-  if (!key.startsWith(PACKS_PREFIX)) return `Icons are kept in packs, under ${PACKS_PREFIX}.`;
-  const parts = key.slice(PACKS_PREFIX.length).split('/');
-  if (parts.length !== 2) return 'An icon is kept in a pack: packs/<pack>/<icon>.svg.';
-  const [pack, file] = parts;
-  if (safeName(pack) !== pack) return 'A pack is named in lower case letters, digits and dashes.';
-  if (file === PACK_FILE) return null;
-  if (!file.endsWith('.svg')) return 'An icon is an .svg file.';
-  if (safeName(file) !== file.slice(0, -'.svg'.length)) {
-    return 'An icon is named in lower case letters, digits and dashes.';
-  }
-  return null;
-}
-
-/** What is wrong with what someone wants to keep at a key, or null. */
-function bodyProblem(key, text) {
-  if (key.endsWith(`/${PACK_FILE}`)) {
-    try {
-      JSON.parse(text);
-      return null;
-    } catch {
-      return 'A pack.json has to be JSON.';
-    }
-  }
-  return looksExecutable(text) ? 'That SVG carries script, so it was not saved.' : null;
-}
-
-/**
  * An http.Server that has not been listened on yet. Every option has a default,
  * so `createIconbenchServer().listen(8010)` serves the app.
  *
@@ -127,9 +87,7 @@ export function createIconbenchServer(options = {}) {
         'Content-Type': contentType(key),
         'Last-Modified': new Date(object.lastModified).toUTCString(),
         'Cache-Control': 'no-store',
-        // A stored SVG opened in a tab of its own is a document on this origin.
-        // It is only ever a drawing, so it is served as one that can do nothing.
-        'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+        'Content-Security-Policy': DRAWING_ONLY_POLICY,
         'X-Content-Type-Options': 'nosniff',
       });
       response.end(object.body);
@@ -140,9 +98,7 @@ export function createIconbenchServer(options = {}) {
       const problem = keyProblem(key);
       if (problem) return sendJson(response, 400, { error: problem });
       const body = await readBody(request);
-      if (body === null) {
-        return sendJson(response, 413, { error: `An icon must be under ${MAX_BODY_BYTES / 1024} KB.` });
-      }
+      if (body === null) return sendJson(response, 413, { error: tooBig() });
       const unfit = bodyProblem(key, body.toString('utf8'));
       if (unfit) return sendJson(response, 400, { error: unfit });
       sendJson(response, 200, await store.write(key, body));
