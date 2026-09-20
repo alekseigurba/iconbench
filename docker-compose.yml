@@ -1,0 +1,17 @@
+services:
+  iconbench:
+    build: .
+    ports:
+      - "8010:8010"
+    environment:
+      STORAGE_DIR: /store
+      PORT: 8010
+    # The library is one folder of SVGs, so one volume at one mount point keeps
+    # all of it. To keep it in a folder you can see instead, swap the volume for
+    # a bind mount: `- ./storage:/store`.
+    volumes:
+      - iconbench-data:/store
+    restart: unless-stopped
+
+volumes:
+  iconbench-data:

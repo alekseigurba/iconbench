@@ -141,3 +141,7 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# The live icon library. Each machine keeps its own.
+/storage/
+.DS_Store

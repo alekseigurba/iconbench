@@ -1,0 +1,954 @@
+/* Header / main / footer, with the pack panel and the toolbox on the left of
+   the stage and the details panel on its right.
+   Everything but the stage sits on --chrome. Sizes, spacing, radii and weights
+   all come from the design tokens. The chrome is domain-map's, cut down to what
+   this page uses, so a control here is the control it is there. */
+
+body {
+  display: grid;
+  /* One column, capped at the screen: sized by its content it would take the
+     width of the widest row and carry the panel off the right-hand edge. */
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto 1fr auto;
+  height: 100vh;
+  height: 100dvh;
+}
+
+.header,
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-075);
+  padding: var(--space-050) var(--space-100);
+  border-bottom: 1px solid var(--line);
+  background: var(--chrome);
+}
+
+.footer {
+  border-bottom: none;
+  border-top: 1px solid var(--line);
+  font-size: var(--fs-200);
+  line-height: var(--lh-m);
+  color: var(--ink-soft);
+}
+
+.footer__right {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: var(--gap-4);
+}
+
+#hint {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Tabular figures, so neither jitters as it changes. */
+.footer__status { font-variant-numeric: tabular-nums; }
+
+.header__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-3);
+  min-width: 0;
+}
+
+.header__logo {
+  display: block;
+  flex: none;
+  width: var(--icon-m);
+  height: var(--icon-m);
+}
+
+/* The one heading on the page, so the one place the heading face is used. */
+.header__title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--fs-500);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-s);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.header__actions {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: var(--space-025);
+}
+
+/* Which icon is open. Unsaved work is the one thing in this header worth
+   interrupting for, so the chip fills orange while there is any. */
+.save-now { gap: var(--gap-2); }
+
+.save-now__name {
+  max-width: 24ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.save-now__state {
+  color: var(--ink-soft);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.header .save-now[data-dirty="true"] {
+  background: var(--r-orange-400);
+  color: var(--ink-invert);
+}
+
+.header .save-now[data-dirty="true"] .save-now__state { color: var(--ink-invert); }
+
+/* --- the file menu -------------------------------------------------------- */
+
+.menu { position: relative; }
+
+/* Fixed, and placed in script: the header does not scroll, and would clip it. */
+.menu__list {
+  position: fixed;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+  padding: var(--gap-1);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-m);
+  background: var(--paper);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
+}
+
+.menu__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-4);
+  height: 28px;
+  padding: 0 var(--space-050);
+  border: none;
+  border-radius: var(--radius-s);
+  background: transparent;
+  font-size: var(--fs-200);
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu__item:hover,
+.menu__item:focus-visible {
+  background: var(--chrome-hover);
+  outline: none;
+}
+
+.menu__item kbd {
+  font: inherit;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.menu__rule {
+  width: 100%;
+  margin: var(--gap-1) 0;
+  border: none;
+  border-top: 1px solid var(--line);
+}
+
+/* --- main ------------------------------------------------------------------ */
+
+.main {
+  display: grid;
+  grid-template-columns: var(--pack-w, 200px) var(--toolbox-w) minmax(0, 1fr) var(--panel-w);
+  min-height: 0;
+}
+
+/* Collapsed leaves a rail behind, so the toggle stays reachable. */
+.main[data-pack="collapsed"] { --pack-w: var(--rail-w); }
+
+/* Fixed on the left: a rail of tools, one to a row, that never folds away —
+   what the pointer does is the first thing to know about the canvas. */
+.toolbox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-1);
+  min-height: 0;
+  padding: var(--space-050) 0;
+  overflow-y: auto;
+  border-right: 1px solid var(--line);
+  background: var(--chrome);
+}
+
+.toolbox__rule {
+  width: 60%;
+  margin: var(--gap-1) 0;
+  border: none;
+  border-top: 1px solid var(--line-strong);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--chrome);
+}
+
+.panel--pack { border-right: 1px solid var(--line); }
+.panel--details { border-left: 1px solid var(--line); }
+
+/* The title, then the controls that act on the whole of the body at the far
+   end. No divider under it: the list reads straight on from its heading. */
+.panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-2);
+  padding: var(--space-050) var(--space-050) var(--space-025);
+}
+
+/* The chips overhang the row, so the title alone sets its height. */
+.panel__head .btn {
+  margin-block: calc((var(--fs-200) * var(--lh-m) - var(--chip-h)) / 2);
+}
+
+.panel__title {
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--fs-200);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--ink-soft);
+}
+
+.panel__buttons {
+  display: flex;
+  flex: none;
+  gap: var(--gap-1);
+}
+
+/* No auto margin: the actions above already take the slack. */
+.panel__foot {
+  display: flex;
+  padding: var(--space-050);
+  border-top: 1px solid var(--line);
+}
+
+/* The pack panel's buttons keep their words and icon to the right, the other
+   way round from the details panel: label first, icon last. */
+.panel--pack .btn--wide { justify-content: flex-end; }
+.panel--pack .btn--wide .icon { order: 1; }
+
+/* The collapse icon points the way the panel would move if pressed. */
+.panel--pack .btn--collapse[aria-pressed="false"] .icon { transform: scaleX(-1); }
+
+/* Shut, the panel keeps its actions and loses everything else — the list is
+   what you folded it away to be rid of. In the rail there is room for the icon
+   and nothing more. */
+.main[data-pack="collapsed"] .panel--pack > .panel__head,
+.main[data-pack="collapsed"] .panel--pack > .tree { display: none; }
+
+.main[data-pack="collapsed"] .panel--pack .panel__actions,
+.main[data-pack="collapsed"] .panel--pack .panel__foot {
+  align-items: center;
+  justify-content: center;
+  padding: var(--gap-2) 0;
+}
+
+.main[data-pack="collapsed"] .panel--pack .panel__foot { border-top: none; }
+.main[data-pack="collapsed"] .panel--pack .btn__label { display: none; }
+
+.main[data-pack="collapsed"] .panel--pack .btn--wide {
+  width: var(--chip-h);
+  justify-content: center;
+  padding: 0;
+}
+
+/* --- the list of icons ------------------------------------------------------ */
+
+.tree {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--gap-1) 0;
+}
+
+.panel__head + .tree { padding-top: 0; }
+
+.tree__row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.tree__item {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-2);
+  flex: 1;
+  min-width: 0;
+  padding: 3px var(--space-050);
+  border: none;
+  background: transparent;
+  font-size: var(--fs-200);
+  line-height: var(--lh-s);
+  text-align: left;
+  cursor: pointer;
+}
+
+.tree__item:hover { background: var(--chrome-hover); }
+
+.tree__item[aria-selected="true"] {
+  background: var(--selected-row);
+  font-weight: var(--fw-semibold);
+  cursor: default;
+}
+
+/* The icon itself, at the size it is most often used: the list doubles as a
+   contact sheet of the pack. On paper, since that is what it is drawn on. */
+.tree__thumb {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  padding: 1px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+}
+
+.tree__thumb--none { border-style: dashed; border-color: var(--line-strong); }
+
+.tree__label {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* "unsaved", not part of the name beside it. */
+.tree__lead {
+  flex: none;
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: var(--fw-regular);
+  color: var(--ink-soft);
+}
+
+/* Out of the way until the row is pointed at: deleting is rare, and final. It
+   lies over the end of the row rather than beside it, so the row — and the
+   colour of the one that is open — runs the full width of the panel. */
+.tree__remove {
+  position: absolute;
+  top: 50%;
+  right: var(--gap-1);
+  transform: translateY(-50%);
+  opacity: 0;
+}
+
+.tree__row:hover .tree__remove,
+.tree__remove:focus-visible { opacity: 1; }
+
+.panel .tree__remove,
+.panel .tree__remove:hover { background: var(--paper); }
+.panel .tree__remove:hover { background: var(--danger); }
+.tree__remove .icon { width: 12px; height: 12px; }
+
+/* A row of actions at the foot of a panel: what you do to what is above it. */
+.panel__actions {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  gap: var(--gap-1);
+  margin-top: auto;
+  padding: var(--space-050);
+  border-top: 1px solid var(--line);
+}
+
+/* --- buttons ------------------------------------------------------------- */
+
+.btn {
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  border-radius: var(--radius-s);
+  padding: var(--space-025) var(--space-050);
+  font-size: var(--fs-200);
+  line-height: var(--lh-s);
+  cursor: pointer;
+}
+
+.btn:hover { background: var(--chrome-hover); }
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Every chrome control is one of these. */
+.btn--chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--chip-h);
+  min-width: var(--chip-h);
+  padding: 0 var(--space-050);
+  border-radius: var(--chip-radius);
+  background: var(--paper);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.btn--danger:hover { background: var(--danger); }
+
+/* The one button in a dialog that does what the dialog is for. */
+.btn--primary,
+.btn--primary:hover {
+  border-color: var(--selection);
+  background: var(--selection);
+  color: var(--ink-invert);
+  font-weight: var(--fw-semibold);
+}
+
+/* A chip holding an icon instead of a word: square. Not to be confused with
+   .btn--icon, which is the larger control the toolbox and the stage use. */
+.btn--chip-icon {
+  width: var(--chip-h);
+  padding: 0;
+}
+
+/* The same button opened out: the icon keeps its place and the label follows. */
+.btn--wide {
+  width: 100%;
+  justify-content: flex-start;
+  gap: var(--gap-2);
+  padding: 0 var(--space-050);
+}
+
+.btn--wide .icon { flex: none; }
+.btn__label { white-space: nowrap; }
+
+/* Every icon in the chrome is drawn the same way: 16px, unfilled, 1.4 stroke,
+   round caps and joins, in the colour of the button it sits in. */
+.btn .icon {
+  width: var(--icon-s);
+  height: var(--icon-s);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon--mirrored { transform: scaleX(-1); }
+
+.btn--icon {
+  display: inline-grid;
+  place-items: center;
+  width: var(--icon-l);
+  height: var(--icon-l);
+  padding: 0;
+  border-radius: var(--radius-s);
+  font-size: var(--fs-400);
+  line-height: 1;
+  background: var(--paper);
+}
+
+/* In the chrome a button is the surface it sits on until it is pointed at: no
+   fill of its own, and a border only under the pointer or keyboard focus. */
+.header .btn,
+.toolbox .btn,
+.panel .btn {
+  border-color: transparent;
+  background: transparent;
+}
+
+.header .btn:hover,
+.header .btn:focus-visible,
+.toolbox .btn:hover,
+.toolbox .btn:focus-visible,
+.panel .btn:hover,
+.panel .btn:focus-visible { border-color: var(--line-strong); }
+
+.panel .btn--danger:hover { background: var(--danger); }
+
+/* The tool in hand is filled in, not merely outlined: down a column of
+   identical squares a border alone does not say which one you are on. */
+.toolbox .tool[aria-pressed="true"],
+.toolbox .tool[aria-pressed="true"]:hover {
+  border-color: var(--selection);
+  background: var(--selection);
+  color: var(--ink-invert);
+}
+
+/* --- the panel's fields ------------------------------------------------------ */
+
+.details {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--space-050);
+  font-size: var(--fs-200);
+}
+
+.field { margin-bottom: var(--gap-2); }
+
+.field__label {
+  display: block;
+  margin-bottom: var(--space-025);
+  font-size: var(--fs-200);
+  color: var(--ink-soft);
+}
+
+.field__input,
+.field__select {
+  width: 100%;
+  padding: var(--space-025) var(--space-050);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-s);
+  background: var(--paper);
+  font-size: var(--fs-200);
+  line-height: var(--lh-m);
+}
+
+/* A short choice sits beside its label: one row, not two. The controls share a
+   width, so they line up down the section. */
+.field--inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-2);
+}
+
+.field--inline .field__label {
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
+.field--inline .field__select,
+.field--inline .slider { flex: 0 0 62%; width: auto; min-width: 0; }
+
+.field__check {
+  margin: 0;
+  accent-color: var(--selection);
+  cursor: pointer;
+}
+
+/* A value to read, not edit: the controls' own ink, without their box. */
+.field__value { color: var(--ink); }
+
+/* Typed, but not a colour yet — say so without throwing the value away. */
+.field__input--bad {
+  border-color: var(--r-red-400);
+  outline-color: var(--r-red-400);
+}
+
+.field__input:disabled,
+.field__select:disabled,
+.field__check:disabled,
+.slider__input:disabled {
+  opacity: 0.55;
+  cursor: default;
+  pointer-events: none;
+}
+
+.section + .section { margin-top: var(--gap-3); }
+
+.section__title {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-2);
+  width: 100%;
+  margin: 0;
+  padding: var(--gap-1) 0;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  font-size: 12px;
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--ink-soft);
+}
+
+.section__body { padding-top: var(--gap-2); }
+
+/* What the panel is about, said once at the top of it. */
+.details__note {
+  margin: 0 0 var(--gap-2);
+  color: var(--ink-soft);
+}
+
+.slider {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-2);
+}
+
+.slider__input {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--selection);
+}
+
+.slider__value {
+  flex: none;
+  width: 38px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+/* The color a line or a fill is wearing, and the switch that points the picker
+   below at it: pressed, it is the one being set. */
+.ink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gap-2);
+  flex: 0 0 62%;
+  min-width: 0;
+  height: var(--chip-h);
+  padding: 0 var(--space-050) 0 3px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--chip-radius);
+  background: var(--paper);
+  font-size: var(--fs-200);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.ink[aria-pressed="true"] {
+  border-color: var(--selection);
+  outline: 1px solid var(--selection);
+}
+
+.ink__chip {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border: 1px solid rgb(0 0 0 / 25%);
+  border-radius: var(--radius-s);
+}
+
+/* No fill is shown as what it is: paper with a stroke through it. */
+.ink__chip--none {
+  background:
+    linear-gradient(to top right, transparent calc(50% - 1px), var(--r-red-400) calc(50% - 1px), var(--r-red-400) calc(50% + 1px), transparent calc(50% + 1px)),
+    var(--paper);
+}
+
+/* Eight across: the blacks and the greys, then domain-map's six families. */
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: var(--gap-1);
+}
+
+.swatch {
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-s);
+  cursor: pointer;
+}
+
+.swatch[aria-pressed="true"] { outline: 2px solid var(--selection); outline-offset: 1px; }
+
+/* --- the color picker ------------------------------------------------------ */
+
+/* Always open, never behind a button. Saturation runs across the area and
+   brightness up it, over the pure hue the strip below is set to (--hue, from
+   script). The thumb may hang past the edge, so nothing here clips. */
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-2);
+  margin-bottom: var(--gap-3);
+}
+
+.picker__area {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-s);
+  background:
+    linear-gradient(to top, #000, rgb(0 0 0 / 0)),
+    linear-gradient(to right, #fff, rgb(255 255 255 / 0)),
+    var(--hue, #f00);
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+}
+
+.picker__area:focus-visible,
+.picker__hue:focus-visible {
+  outline: 2px solid var(--selection);
+  outline-offset: 2px;
+}
+
+.picker__thumb {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border: 2px solid var(--r-neutral-white);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 45%);
+  pointer-events: none;
+}
+
+/* A range input, so the keyboard comes free; only the look is its own. */
+.picker__hue {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 12px;
+  margin: var(--gap-1) 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: linear-gradient(to right,
+    #f00, #ff0 16.67%, #0f0 33.33%, #0ff 50%, #00f 66.67%, #f0f 83.33%, #f00);
+  cursor: pointer;
+}
+
+.picker__hue::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--r-neutral-white);
+  border-radius: 50%;
+  background: var(--hue, #f00);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 45%);
+}
+
+.picker__hue::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--r-neutral-white);
+  border-radius: 50%;
+  background: var(--hue, #f00);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 45%);
+}
+
+.picker__hue::-moz-range-track { background: transparent; }
+
+.picker__hex {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-2);
+}
+
+.picker__chip {
+  flex: none;
+  width: var(--chip-h);
+  height: var(--chip-h);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-s);
+}
+
+.picker__hex .field__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- dialogs ---------------------------------------------------------------- */
+
+/* A native <dialog>, so the page behind is inert, Esc shuts it and focus goes
+   back to what opened it. It carries no padding of its own, so a click whose
+   target is the dialog itself can only have landed on the backdrop. */
+.dialog {
+  --dialog-inset: 20px;
+  inset: 0;
+  margin: auto;
+  width: min(620px, calc(100vw - 2 * var(--dialog-inset)));
+  max-height: calc(100vh - 2 * var(--dialog-inset));
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-l);
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 16px 48px rgb(0 0 0 / 24%);
+}
+
+.dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog::backdrop { background: rgb(20 20 20 / 16%); }
+
+.dialog__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-4);
+  min-height: 0;
+  padding: var(--space-100);
+  font-size: var(--fs-200);
+}
+
+.dialog__title {
+  margin: 0;
+  font-size: var(--fs-200);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.dialog__foot {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--gap-2);
+  padding-top: var(--gap-3);
+  border-top: 1px solid var(--line);
+}
+
+.dialog__foot--end { justify-content: flex-end; }
+
+/* --- the palette editor ------------------------------------------------------- */
+
+/* It sits in the bottom right corner, 20px in, over a scrim light enough that
+   the canvas stays readable: the point of editing a colour is watching the
+   lines that wear it change. One narrow column, standing over the details
+   panel so that it keeps off the icon. */
+.dialog--palette {
+  inset: auto var(--dialog-inset) var(--dialog-inset) auto;
+  margin: 0;
+  width: min(260px, calc(100vw - 2 * var(--dialog-inset)));
+}
+
+.dialog--palette::backdrop { background: rgb(20 20 20 / 6%); }
+
+.palette-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-3);
+}
+
+.palette-editor .picker { margin-bottom: 0; }
+
+.palette-editor__label {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+/* --- the library ------------------------------------------------------------ */
+
+.library__note {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.library__note[data-error="true"] { color: var(--r-red-400); }
+
+/* A sheet of tiles, the way an icon set is always shown: the drawing first,
+   its name under it. Only the sheet scrolls. */
+.library {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: var(--gap-2);
+  min-height: 120px;
+  max-height: 46vh;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.library__tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-1);
+  padding: var(--space-075) var(--gap-1) var(--gap-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  background: var(--paper);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.library__tile:hover,
+.library__tile:focus-visible { border-color: var(--line-strong); background: var(--chrome); outline: none; }
+
+/* The one the name field holds, or the one that is open. */
+.library__tile[aria-current="true"] {
+  border-color: var(--selection);
+  outline: 1px solid var(--selection);
+}
+
+/* The pack preview: the same sheet, given the room to show a whole pack at
+   once, since it is there to be looked at rather than chosen from. */
+.dialog--sheet { width: min(900px, calc(100vw - 2 * var(--dialog-inset))); }
+.dialog--sheet .library { max-height: 64vh; }
+
+/* One drawing for an icon; the first few, as a small sheet, for a pack. */
+.library__thumbs {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+}
+
+.library__thumbs .library__thumb {
+  width: 48px;
+  height: 48px;
+}
+
+.library__thumbs--sheet {
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.library__thumbs--sheet .library__thumb {
+  width: 22px;
+  height: 22px;
+}
+
+.library__label {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.library__when {
+  color: var(--ink-soft);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.library__empty {
+  grid-column: 1 / -1;
+  align-self: center;
+  margin: 0;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+.library__name {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-1);
+}
+
+.library__ext { color: var(--ink-soft); }
+
+/* --- a narrow screen --------------------------------------------------------- */
+
+/* A tablet held upright, with a pencil: the panel gives way to the canvas by
+   narrowing, not by leaving — what the pencil draws with is set there. */
+@media (max-width: 900px) {
+  :root { --panel-w: 200px; }
+  .main:not([data-pack="collapsed"]) { --pack-w: 150px; }
+  .header__title { display: none; }
+  #pointer-at, #stats { display: none; }
+}

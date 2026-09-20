@@ -1,0 +1,19 @@
+{
+  "name": "iconbench",
+  "version": "1.0.0",
+  "description": "A minimalistic SVG icon authoring tool: solid lines, fills and layers, and a local library to keep them in.",
+  "license": "MIT",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alekseigurba/iconbench.git"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node scripts/serve.mjs app 8010",
+    "test": "node tests/geometry.test.mjs && node tests/document.test.mjs && node tests/pack.test.mjs && node tests/server.test.mjs"
+  }
+}

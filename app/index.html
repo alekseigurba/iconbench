@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>iconbench</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/canvas.css">
+</head>
+<body>
+  <header class="header">
+    <span class="header__brand">
+      <img class="header__logo" src="favicon.svg" alt="" aria-hidden="true">
+      <h1 class="header__title">iconbench</h1>
+      <!-- One menu, beside the logo, for everything that is about the file
+           rather than about the drawing. menu.js opens and shuts it. -->
+      <span class="menu">
+        <button class="btn btn--chip" id="file-menu-button" type="button"
+                aria-haspopup="menu" aria-expanded="false" aria-controls="file-menu">File</button>
+        <div class="menu__list" id="file-menu" role="menu" hidden>
+          <button class="menu__item" role="menuitem" type="button" data-action="new">New icon<kbd>Ctrl+Alt+N</kbd></button>
+          <button class="menu__item" role="menuitem" type="button" data-action="save">Save<kbd>Ctrl+S</kbd></button>
+          <button class="menu__item" role="menuitem" type="button" data-action="save-as">Save as…<kbd>Ctrl+Shift+S</kbd></button>
+          <button class="menu__item" role="menuitem" type="button" data-action="save-to"
+                  title="Write the icon to a file of your choosing, outside the library">Save to…</button>
+          <button class="menu__item" role="menuitem" type="button" data-action="load-from"
+                  title="Open an iconbench SVG from anywhere, and add it to the pack">Load from…</button>
+          <hr class="menu__rule">
+          <button class="menu__item" role="menuitem" type="button" data-action="new-pack">New pack…</button>
+          <button class="menu__item" role="menuitem" type="button" data-action="open-pack">Open pack…<kbd>Ctrl+O</kbd></button>
+          <button class="menu__item" role="menuitem" type="button" data-action="preview-pack"
+                  title="Every icon in the pack on one sheet">Preview pack…<kbd>Ctrl+P</kbd></button>
+          <button class="menu__item" role="menuitem" type="button" data-action="save-pack-to"
+                  title="Write the whole pack — palette and icons — to one file, to carry it to another machine">Save pack to…</button>
+          <button class="menu__item" role="menuitem" type="button" data-action="load-pack-from"
+                  title="Open a pack file from anywhere, and add it to the library">Load pack from…</button>
+        </div>
+      </span>
+    </span>
+    <span class="header__actions">
+      <!-- Which icon is open, and whether what is on the canvas has been saved:
+           unsaved work is the one thing in this header worth interrupting for. -->
+      <button class="btn btn--chip save-now" id="save-now" type="button" title="Save the icon to the library">
+        <span class="save-now__name" id="icon-name">untitled</span>
+        <span class="save-now__state" id="icon-state"></span>
+      </button>
+      <button class="btn btn--chip btn--chip-icon" id="undo" type="button" title="Undo (Ctrl+Z)" aria-label="Undo">
+        <span class="icon" data-icon="icons/undo.svg" aria-hidden="true"></span>
+      </button>
+      <button class="btn btn--chip btn--chip-icon" id="redo" type="button" title="Redo (Ctrl+Shift+Z)" aria-label="Redo">
+        <span class="icon icon--mirrored" data-icon="icons/undo.svg" aria-hidden="true"></span>
+      </button>
+    </span>
+  </header>
+
+  <main class="main">
+    <!-- The pack: every icon in it, to pick one for the canvas. packpanel.js
+         fills the list. -->
+    <aside class="panel panel--pack" id="pack-panel" aria-label="Icon pack">
+      <div class="panel__head">
+        <span class="panel__title" id="pack-title"></span>
+        <span class="panel__buttons">
+          <button class="btn btn--chip btn--chip-icon" id="preview-pack" type="button"
+                  title="Preview the whole pack (Ctrl+P)" aria-label="Preview pack"
+                  aria-haspopup="dialog" aria-controls="library-dialog">
+            <span class="icon" data-icon="icons/pack.svg" aria-hidden="true"></span>
+          </button>
+          <button class="btn btn--chip btn--chip-icon" id="new-icon" type="button"
+                  title="New icon in this pack (Ctrl+Alt+N)" aria-label="New icon">
+            <span class="icon" data-icon="icons/add.svg" aria-hidden="true"></span>
+          </button>
+        </span>
+      </div>
+      <nav class="tree" id="icon-list" aria-label="Icons in this pack"></nav>
+      <div class="panel__actions">
+        <button class="btn btn--chip btn--chip-icon btn--wide" id="open-pack" type="button"
+                title="Open another pack (Ctrl+O)" aria-label="Open pack" aria-haspopup="dialog" aria-controls="library-dialog">
+          <span class="icon" data-icon="icons/folder.svg" aria-hidden="true"></span>
+          <span class="btn__label">Open pack…</span>
+        </button>
+      </div>
+      <div class="panel__foot">
+        <button class="btn btn--chip btn--chip-icon btn--wide btn--collapse" id="toggle-pack" type="button"
+                aria-pressed="true" aria-controls="pack-panel" title="Collapse the pack panel">
+          <span class="icon" data-icon="icons/collapse.svg" aria-hidden="true"></span>
+          <span class="btn__label">Collapse</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- The toolbox: what the pointer does on the canvas. Drawing tools above
+         the rule put lines on the icon; the two below it work on the sketch. -->
+    <aside class="toolbox" id="toolbox" role="toolbar" aria-label="Tools" aria-orientation="vertical">
+      <button class="btn btn--icon tool" type="button" data-tool="select" title="Select and edit (V)" aria-label="Select">
+        <span class="icon" data-icon="icons/tool-select.svg" aria-hidden="true"></span>
+      </button>
+      <button class="btn btn--icon tool" type="button" data-tool="straight" title="Straight line with bends (L)" aria-label="Straight line">
+        <span class="icon" data-icon="icons/tool-straight.svg" aria-hidden="true"></span>
+      </button>
+      <button class="btn btn--icon tool" type="button" data-tool="quadratic" title="Quadratic Bézier (Q)" aria-label="Quadratic Bézier">
+        <span class="icon" data-icon="icons/tool-quadratic.svg" aria-hidden="true"></span>
+      </button>
+      <button class="btn btn--icon tool" type="button" data-tool="catmull" title="Catmull-Rom curve (C)" aria-label="Catmull-Rom curve">
+        <span class="icon" data-icon="icons/tool-catmull.svg" aria-hidden="true"></span>
+      </button>
+      <button class="btn btn--icon tool" type="button" data-tool="freehand" title="Free-hand (F)" aria-label="Free-hand">
+        <span class="icon" data-icon="icons/tool-freehand.svg" aria-hidden="true"></span>
+      </button>
+      <hr class="toolbox__rule">
+      <button class="btn btn--icon tool" type="button" data-tool="marker" title="Marker, on the sketch layer (M)" aria-label="Marker">
+        <span class="icon" data-icon="icons/tool-marker.svg" aria-hidden="true"></span>
+      </button>
+      <button class="btn btn--icon" type="button" id="sketch-image" title="Put a picture on the sketch layer — or paste one with Ctrl+V" aria-label="Sketch picture">
+        <span class="icon" data-icon="icons/tool-image.svg" aria-hidden="true"></span>
+      </button>
+      <input type="file" id="sketch-file" accept="image/*" hidden>
+    </aside>
+
+    <section class="stage" id="stage">
+      <svg class="canvas" id="canvas" role="application" aria-label="Icon canvas">
+        <defs>
+          <pattern id="pixel-grid" width="1" height="1" patternUnits="userSpaceOnUse">
+            <path class="canvas__grid" d="M 1 0 L 0 0 0 1"></path>
+          </pattern>
+        </defs>
+        <g id="viewport">
+          <!-- Bottom first: the artboard, the sketch under the icon, the icon's
+               layers, then the editor's own marks on top where they can always
+               be pressed. canvas.js fills all of them. -->
+          <g id="layer-board"></g>
+          <g id="layer-sketch"></g>
+          <g id="layer-stacks"></g>
+          <g id="layer-guides"></g>
+          <g id="layer-draft"></g>
+          <g id="layer-edit"></g>
+        </g>
+      </svg>
+
+      <!-- The icon at the sizes it will be used at: the only honest test of
+           whether it reads. -->
+      <div class="preview" id="preview" aria-label="Preview at 16, 24 and 48 pixels"></div>
+
+      <div class="layers" id="layer-control" role="group" aria-label="Layers"></div>
+
+      <div class="zoom">
+        <button class="btn btn--icon" id="zoom-in" type="button" title="Zoom in">+</button>
+        <button class="btn btn--icon" id="zoom-out" type="button" title="Zoom out">&minus;</button>
+        <button class="btn btn--icon" id="zoom-fit" type="button" title="Fit to screen (0)">&#9723;</button>
+      </div>
+    </section>
+
+    <!-- The panel: how the selected line looks — or, with nothing selected, how
+         the next one will. details.js fills it; palette.js owns the colors. -->
+    <aside class="panel panel--details" id="details-panel" aria-label="Line and fill">
+      <div class="details" id="details">
+        <section class="section" id="section-spline" aria-labelledby="spline-title">
+          <h2 class="section__title section__title--static" id="spline-title">Spline</h2>
+          <div class="section__body" id="spline-body"></div>
+        </section>
+        <section class="section" id="section-fill" aria-labelledby="fill-title">
+          <h2 class="section__title section__title--static" id="fill-title">Fill</h2>
+          <div class="section__body" id="fill-body"></div>
+        </section>
+        <section class="section" id="section-color" aria-labelledby="color-title">
+          <h2 class="section__title section__title--static" id="color-title">Color</h2>
+          <div class="section__body" id="color-body"></div>
+        </section>
+      </div>
+      <div class="panel__actions" id="details-actions">
+        <!-- The palette belongs to the pack rather than to the selection, so
+             this heads the strip and stays when nothing is selected. -->
+        <button class="btn btn--chip btn--chip-icon btn--wide" id="edit-palette" type="button"
+                title="Edit the colors this pack's icons wear" aria-label="Edit palette"
+                aria-haspopup="dialog" aria-controls="palette-dialog">
+          <span class="icon" data-icon="icons/palette.svg" aria-hidden="true"></span>
+          <span class="btn__label">Edit palette</span>
+        </button>
+        <button class="btn btn--chip btn--danger btn--chip-icon btn--wide" id="delete-selected" type="button" hidden
+                title="Delete the selected line (Delete)" aria-label="Delete the selected line">
+          <span class="icon" data-icon="icons/delete.svg" aria-hidden="true"></span>
+          <span class="btn__label">Delete line</span>
+        </button>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="footer">
+    <span id="hint"></span>
+    <span class="footer__right">
+      <span id="pointer-at" class="footer__status"></span>
+      <span id="stats"></span>
+      <span id="status" class="footer__status" role="status"></span>
+    </span>
+  </footer>
+
+  <!-- The palette editor. The palette belongs to the pack rather than to what
+       is selected, so it opens over the whole page; palette.js fills it. -->
+  <dialog class="dialog dialog--palette" id="palette-dialog" aria-labelledby="palette-title"></dialog>
+
+  <!-- The library: a sheet of what is already there — packs, or the icons of
+       this one — and a name field when there is something to name. One dialog
+       for every question the library has; library.js fills it each time. -->
+  <dialog class="dialog dialog--library" id="library-dialog" aria-labelledby="library-title">
+    <div class="dialog__body">
+      <h2 class="dialog__title" id="library-title">Open a pack</h2>
+      <p class="library__note" id="library-note" hidden></p>
+      <div class="library" id="library-list"></div>
+      <form class="library__save" id="library-save" hidden>
+        <label class="field__label" for="library-name">Save as</label>
+        <span class="library__name">
+          <input class="field__input" id="library-name" name="library-name" autocomplete="off" spellcheck="false" maxlength="64">
+          <span class="library__ext">.svg</span>
+        </span>
+      </form>
+      <div class="dialog__foot dialog__foot--end">
+        <button class="btn btn--chip" type="button" id="library-close">Cancel</button>
+        <button class="btn btn--chip btn--primary" type="submit" form="library-save" id="library-confirm" hidden>Save</button>
+      </div>
+    </div>
+  </dialog>
+
+  <input type="file" id="load-file" accept=".svg,image/svg+xml" hidden>
+  <input type="file" id="load-pack-file" accept=".json,application/json" hidden>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

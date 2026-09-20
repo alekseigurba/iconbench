@@ -1,0 +1,4 @@
+# The repo is worked on from Windows and macOS interchangeably: text is LF in
+# the repo and in the working tree on both, so a diff never shows line endings.
+* text=auto eol=lf
+*.woff2 binary

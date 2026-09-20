@@ -1,0 +1,160 @@
+/* Design system: the raw tokens, with a semantic layer on top naming what each
+   one does here. They are domain-map's, cut down to the ones this page uses, so
+   the two tools read as one family. The prose version lives in design-system.md
+   at the repo root — keep the two in step. */
+
+:root {
+  /* --- raw colours --------------------------------------------------------- */
+  --r-brand-200: #cbd7c6;
+  --r-brand-400: #527a42;   /* the brand green: the logo, and nothing louder */
+
+  --r-haze-200: #f3f1f0;
+  --r-haze-500: #d4d1cf;
+
+  /* haze tinted toward the brand green: the chrome's surfaces and lines */
+  --r-sage-200: #f1f4ef;
+  --r-sage-400: #e4e9e1;
+  --r-sage-500: #d3dbcf;
+  --r-sage-600: #bcc6b7;
+
+  --r-charcoal-300: #686868;
+  --r-charcoal-400: #282828;
+  --r-charcoal-600: #000000;
+
+  --r-neutral-white: #ffffff;
+  --r-ember-400: #ef706b;
+  --r-orange-400: #ff7429;
+  --r-red-400: #b00c15;
+  --r-red-100: #fef6f6;
+  --r-focused-400: #0071e3;
+
+  /* --- type ---------------------------------------------------------------- */
+  --font-heading: "Poppins";
+  --font-text: "Poppins";
+
+  --fs-200: 13px;
+  --fs-300: 14px;
+  --fs-400: 16px;
+  --fs-500: 22px;
+
+  --fw-regular: 400;
+  --fw-semibold: 600;
+
+  --lh-s: 1.2;
+  --lh-m: 1.5;
+
+  /* --- spacing, radius, icons ---------------------------------------------- */
+  --space-025: 0.25rem;  /* 4px */
+  --space-050: 0.5rem;   /* 8px */
+  --space-075: 0.75rem;  /* 12px */
+  --space-100: 1rem;     /* 16px */
+
+  --radius-s: 0.25rem;
+  --radius-m: 0.5rem;
+  --radius-l: 0.75rem;
+
+  --icon-s: 16px;
+  --icon-m: 24px;
+  --icon-l: 32px;
+
+  /* --- what they mean here -------------------------------------------------- */
+  --ink: var(--r-charcoal-400);
+  --ink-soft: var(--r-charcoal-300);
+  --ink-invert: var(--r-neutral-white);
+  --paper: var(--r-neutral-white);   /* the artboard, and controls sitting on chrome */
+  --stage: var(--r-haze-200);        /* the desk the artboard lies on */
+  --chrome: var(--r-sage-200);       /* header, footer, toolbox, panel */
+  --chrome-hover: var(--r-sage-400);
+  --line: var(--r-sage-500);
+  --line-strong: var(--r-sage-600);
+  --selection: var(--r-focused-400);
+  --selected-row: var(--r-brand-200);
+  --danger: var(--r-red-100);
+
+  --fs-xs: var(--fs-200);
+  --fs-s: var(--fs-300);
+  --fs-m: var(--fs-500);
+
+  --gap-1: var(--space-025);
+  --gap-2: var(--space-050);
+  --gap-3: var(--space-075);
+  --gap-4: var(--space-100);
+
+  /* The stock palette: 32 inks, in the order the swatch grid shows them — eight
+     across, four down. The first two columns are the blacks and the greys an
+     icon is mostly drawn in; the six after them are domain-map's 24 fills, each
+     column one family: greens, blues, pinks and purples, yellows, oranges and
+     browns, reds. */
+  --c1:  #000000;
+  --c2:  #686868;
+  --c3:  #86a27b;
+  --c4:  #7fc6d8;
+  --c5:  #e8bbd5;
+  --c6:  #fede49;
+  --c7:  #b06a46;
+  --c8:  #f57a8c;
+
+  --c9:  #141414;
+  --c10: #9a9a9a;
+  --c11: #51a45c;
+  --c12: #3c94a3;
+  --c13: #a1a4ec;
+  --c14: #fee986;
+  --c15: #d36e3b;
+  --c16: #e08aac;
+
+  --c17: #282828;
+  --c18: #c9c9c9;
+  --c19: #77bc80;
+  --c20: #5985ab;
+  --c21: #a86cd1;
+  --c22: #d3b23b;
+  --c23: #f2c3aa;
+  --c24: #f66598;
+
+  --c25: #3d3d3d;
+  --c26: #ffffff;
+  --c27: #0d9c08;
+  --c28: #aedbe6;
+  --c29: #a85bad;
+  --c30: #f1982b;
+  --c31: #9f4e4e;
+  --c32: #d86161;
+
+  /* Canvas ink: what the editor draws that is not the icon. */
+  --grid: rgba(40, 40, 40, 0.10);
+  --live-area: var(--r-ember-400);
+  --marker: var(--r-orange-400);
+
+  /* Chrome controls: every panel button is one of these. */
+  --chip-h: 24px;
+  --chip-radius: var(--radius-m);
+  --toolbox-w: 44px;
+  --rail-w: 28px;             /* what is left of a collapsed panel */
+  --panel-w: 250px;
+}
+
+* { box-sizing: border-box; }
+
+/* A `display` rule in author CSS beats the UA's [hidden] { display: none },
+   so anything flex or grid would stay on screen while marked hidden. */
+[hidden] { display: none !important; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-text);
+  font-size: var(--fs-400);
+  line-height: var(--lh-m);
+  color: var(--ink);
+  background: var(--paper);
+  overflow: hidden; /* the artboard fits the screen; nothing scrolls but the panel */
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+  color: var(--ink);
+}
